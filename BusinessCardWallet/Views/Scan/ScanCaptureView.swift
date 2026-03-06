@@ -290,6 +290,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     private var hasCapturedImage = false
     private var frameCounter = 0
     private var stableFrameCount = 0
+    private var textStableCount = 0
     private var lastBoundingBox: CGRect?
 
     private let onCapture: (UIImage) -> Void
@@ -432,8 +433,11 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             DispatchQueue.main.async {
                 self.detectedLayer.path = nil
             }
+            evaluateTextFallback(pixelBuffer: pixelBuffer)
             return
         }
+
+        textStableCount = 0
 
         DispatchQueue.main.async {
             self.drawOverlay(for: rectangle)
@@ -506,6 +510,82 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         DispatchQueue.main.async {
             self.onCapture(finalImage)
         }
+    }
+
+    private func evaluateTextFallback(pixelBuffer: CVPixelBuffer) {
+        if frameCounter % 3 != 0 { return }
+        guard isLikelyCardTextPresent(pixelBuffer: pixelBuffer) else {
+            textStableCount = 0
+            return
+        }
+
+        textStableCount += 1
+        if textStableCount >= 3 {
+            captureUsingGuideCrop(from: pixelBuffer)
+        }
+    }
+
+    private func isLikelyCardTextPresent(pixelBuffer: CVPixelBuffer) -> Bool {
+        let cameraImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
+        let guideCrop = croppedGuideImage(from: cameraImage)
+
+        guard let cgImage = ciContext.createCGImage(guideCrop, from: guideCrop.extent) else { return false }
+
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .fast
+        request.usesLanguageCorrection = false
+        request.recognitionLanguages = ["ko-KR", "en-US"]
+        request.minimumTextHeight = 0.02
+
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        do {
+            try handler.perform([request])
+        } catch {
+            return false
+        }
+
+        let observations = (request.results as? [VNRecognizedTextObservation]) ?? []
+        let count = observations.reduce(into: 0) { partial, observation in
+            guard let candidate = observation.topCandidates(1).first else { return }
+            let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
+            if text.count >= 2 && candidate.confidence > 0.30 {
+                partial += 1
+            }
+        }
+        return count >= 3
+    }
+
+    private func captureUsingGuideCrop(from pixelBuffer: CVPixelBuffer) {
+        guard !hasCapturedImage else { return }
+        hasCapturedImage = true
+
+        let cameraImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
+        let guideCrop = croppedGuideImage(from: cameraImage)
+
+        let colorAdjusted = guideCrop.applyingFilter("CIColorControls", parameters: [
+            kCIInputSaturationKey: 1.02,
+            kCIInputContrastKey: 1.06,
+            kCIInputBrightnessKey: 0.01
+        ])
+
+        guard let cgImage = ciContext.createCGImage(colorAdjusted, from: colorAdjusted.extent) else {
+            hasCapturedImage = false
+            return
+        }
+
+        DispatchQueue.main.async {
+            self.onCapture(UIImage(cgImage: cgImage))
+        }
+    }
+
+    private func croppedGuideImage(from cameraImage: CIImage) -> CIImage {
+        let extent = cameraImage.extent
+        let width = extent.width * 0.84
+        let height = width / 1.72
+        let x = extent.minX + (extent.width - width) * 0.5
+        let y = extent.minY + (extent.height - height) * 0.5
+        let cropRect = CGRect(x: x, y: y, width: width, height: height).intersection(extent)
+        return cameraImage.cropped(to: cropRect)
     }
 
     private static func perspectiveAndColorAdjusted(ciImage: CIImage, rectangle: VNRectangleObservation) -> CIImage? {
