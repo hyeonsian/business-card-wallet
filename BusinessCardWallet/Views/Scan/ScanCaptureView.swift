@@ -282,8 +282,6 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     private let previewLayer = AVCaptureVideoPreviewLayer()
     private let guideLayer = CAShapeLayer()
     private let detectedLayer = CAShapeLayer()
-    private let detectionQueue = DispatchQueue(label: "camera.rectangle.detection.queue")
-    private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     private let ciContext = CIContext(options: nil)
 
     private var isDetectingFrame = false
@@ -339,19 +337,15 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        sessionQueue.async {
-            if !self.session.isRunning {
-                self.session.startRunning()
-            }
+        if !session.isRunning {
+            session.startRunning()
         }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        sessionQueue.async {
-            if self.session.isRunning {
-                self.session.stopRunning()
-            }
+        if session.isRunning {
+            session.stopRunning()
         }
     }
 
@@ -390,7 +384,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             connection.videoOrientation = .portrait
         }
 
-        videoOutput.setSampleBufferDelegate(self, queue: detectionQueue)
+        videoOutput.setSampleBufferDelegate(self, queue: .main)
 
         session.commitConfiguration()
     }
