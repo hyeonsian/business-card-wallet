@@ -4,10 +4,11 @@ import UIKit
 struct CameraPickerView: UIViewControllerRepresentable {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedImage: UIImage?
+    let sourceType: UIImagePickerController.SourceType
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
+        picker.sourceType = sourceType
         picker.delegate = context.coordinator
         picker.allowsEditing = false
         return picker

@@ -7,6 +7,7 @@ struct WalletHomeView: View {
     @Query private var cards: [BusinessCard]
 
     @StateObject private var viewModel = WalletHomeViewModel()
+    @State private var selectedCard: BusinessCard?
 
     var body: some View {
         NavigationStack {
@@ -78,6 +79,9 @@ struct WalletHomeView: View {
                     }
                 }
             }
+            .sheet(item: $selectedCard) { card in
+                CardDetailView(card: card)
+            }
         }
     }
 
@@ -127,6 +131,9 @@ struct WalletHomeView: View {
                             toggleFavorite(card)
                         }
                         .padding(.horizontal, 10)
+                        .onTapGesture {
+                            selectedCard = card
+                        }
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
@@ -134,6 +141,10 @@ struct WalletHomeView: View {
                 List(filteredCards) { card in
                     CardRowView(card: card) {
                         toggleFavorite(card)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedCard = card
                     }
                 }
                 .listStyle(.plain)

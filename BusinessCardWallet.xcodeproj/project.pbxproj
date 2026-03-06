@@ -19,6 +19,7 @@
 		A4B38BEAF52E14B7F07F6492 /* ScanCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BD308D3625FD61DB0E1A27 /* ScanCaptureView.swift */; };
 		A99E9C18B0B956CC484B7AB3 /* BusinessCardWalletApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB76388B08931FD968AEF93 /* BusinessCardWalletApp.swift */; };
 		ADD23D8F34D997AEB7AA9FD4 /* OCRReviewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA76C2EAEBA6692555CF9CDA /* OCRReviewEditView.swift */; };
+		BE39B6B17E074C3112F7D3D1 /* CardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C4AB402906AD05A547235F /* CardDetailView.swift */; };
 		D23232C5A79B29B54962E6F2 /* LocalCardImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9335C13AD64F99A44D02D8EF /* LocalCardImageView.swift */; };
 		E9589346B79A4F24DC96D038 /* WalletHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D238B226179F439CCF9CDBD /* WalletHomeView.swift */; };
 		EEB00876AE6CABE74DEA490A /* BusinessCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DFCFF904A0ABBE4266B3FE1 /* BusinessCard.swift */; };
@@ -26,6 +27,7 @@
 
 /* Begin PBXFileReference section */
 		192943C09D813786E3DDFDCD /* BusinessCardTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCardTileView.swift; sourceTree = "<group>"; };
+		36C4AB402906AD05A547235F /* CardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDetailView.swift; sourceTree = "<group>"; };
 		3BAD932061601FD724E075AB /* CardRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRowView.swift; sourceTree = "<group>"; };
 		42BD308D3625FD61DB0E1A27 /* ScanCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanCaptureView.swift; sourceTree = "<group>"; };
 		4A776FDA10685012F3FEEEF8 /* ViewOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewOptions.swift; sourceTree = "<group>"; };
@@ -48,6 +50,7 @@
 		0EC7324A817A8393909470D4 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				36C4AB402906AD05A547235F /* CardDetailView.swift */,
 				5D238B226179F439CCF9CDBD /* WalletHomeView.swift */,
 				2D98E94336B0CB724861B695 /* Components */,
 				B67C9C49E8E30815257C847C /* Scan */,
@@ -194,6 +197,7 @@
 				71DF69B79DB855E3C066A886 /* BusinessCardTileView.swift in Sources */,
 				A99E9C18B0B956CC484B7AB3 /* BusinessCardWalletApp.swift in Sources */,
 				04AE8B914EB7A628203953B4 /* CameraPickerView.swift in Sources */,
+				BE39B6B17E074C3112F7D3D1 /* CardDetailView.swift in Sources */,
 				0CD3A7A62348941096B2CCE1 /* CardGroup.swift in Sources */,
 				4AB9D94DC18439CF76EDD829 /* CardRowView.swift in Sources */,
 				A36EA31E2C38E1FE37A2E2BD /* ImageStore.swift in Sources */,

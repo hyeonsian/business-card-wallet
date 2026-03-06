@@ -21,6 +21,37 @@ struct OCRReviewEditView: View {
                     TextField("웹사이트", text: $draft.website)
                 }
 
+                if !draft.phoneCandidates.isEmpty || !draft.emailCandidates.isEmpty || !draft.websiteCandidates.isEmpty {
+                    Section("후보 적용") {
+                        if !draft.phoneCandidates.isEmpty {
+                            candidatePickerRow(
+                                title: "전화 후보",
+                                candidates: draft.phoneCandidates
+                            ) { selected in
+                                draft.phone = selected
+                            }
+                        }
+
+                        if !draft.emailCandidates.isEmpty {
+                            candidatePickerRow(
+                                title: "이메일 후보",
+                                candidates: draft.emailCandidates
+                            ) { selected in
+                                draft.email = selected
+                            }
+                        }
+
+                        if !draft.websiteCandidates.isEmpty {
+                            candidatePickerRow(
+                                title: "웹사이트 후보",
+                                candidates: draft.websiteCandidates
+                            ) { selected in
+                                draft.website = selected
+                            }
+                        }
+                    }
+                }
+
                 Section("메모") {
                     TextField("메모", text: $draft.memo, axis: .vertical)
                         .lineLimit(3...6)
@@ -42,6 +73,17 @@ struct OCRReviewEditView: View {
                         onSave(draft)
                         dismiss()
                     }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func candidatePickerRow(title: String, candidates: [String], onSelect: @escaping (String) -> Void) -> some View {
+        Menu(title) {
+            ForEach(candidates, id: \.self) { candidate in
+                Button(candidate) {
+                    onSelect(candidate)
                 }
             }
         }

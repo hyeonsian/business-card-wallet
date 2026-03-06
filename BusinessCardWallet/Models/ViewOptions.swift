@@ -23,7 +23,10 @@ struct NewCardDraft {
     var jobTitle: String
     var phone: String
     var email: String
+    var emailCandidates: [String]
     var address: String
     var website: String
+    var websiteCandidates: [String]
+    var phoneCandidates: [String]
     var memo: String
 }

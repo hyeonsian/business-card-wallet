@@ -1,16 +1,18 @@
 import SwiftUI
-import PhotosUI
 import UIKit
+import AVFoundation
+import Photos
 
 struct ScanCaptureView: View {
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
 
-    @State private var isShowingCamera = false
+    @State private var isShowingCameraPicker = false
+    @State private var isShowingPhotoPicker = false
     @State private var isProcessing = false
     @State private var errorMessage: String?
+    @State private var permissionAlert: PermissionAlert?
 
     let onScanComplete: (NewCardDraft) -> Void
 
@@ -44,14 +46,16 @@ struct ScanCaptureView: View {
 
                 HStack(spacing: 12) {
                     Button {
-                        isShowingCamera = true
+                        handleCameraTap()
                     } label: {
                         Label("카메라", systemImage: "camera")
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!UIImagePickerController.isSourceTypeAvailable(.camera) || isProcessing)
+                    .disabled(isProcessing)
 
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images, photoLibrary: .shared()) {
+                    Button {
+                        handlePhotoLibraryTap()
+                    } label: {
                         Label("사진첩", systemImage: "photo")
                     }
                     .buttonStyle(.bordered)
@@ -88,22 +92,79 @@ struct ScanCaptureView: View {
                     Button("닫기") { dismiss() }
                 }
             }
-            .sheet(isPresented: $isShowingCamera) {
-                CameraPickerView(selectedImage: $selectedImage)
+            .sheet(isPresented: $isShowingCameraPicker) {
+                CameraPickerView(selectedImage: $selectedImage, sourceType: .camera)
             }
-            .onChange(of: selectedPhotoItem) { _, newValue in
-                guard let newValue else { return }
-                Task {
-                    do {
-                        if let data = try await newValue.loadTransferable(type: Data.self),
-                           let image = UIImage(data: data) {
-                            selectedImage = image
-                        }
-                    } catch {
-                        errorMessage = "사진 불러오기에 실패했습니다: \(error.localizedDescription)"
+            .sheet(isPresented: $isShowingPhotoPicker) {
+                CameraPickerView(selectedImage: $selectedImage, sourceType: .photoLibrary)
+            }
+            .alert(item: $permissionAlert) { alert in
+                Alert(
+                    title: Text(alert.title),
+                    message: Text(alert.message),
+                    primaryButton: .default(Text("설정 열기"), action: openSettings),
+                    secondaryButton: .cancel(Text("취소"))
+                )
+            }
+        }
+    }
+
+    private func handleCameraTap() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            errorMessage = "이 기기에서는 카메라를 사용할 수 없습니다."
+            return
+        }
+
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            isShowingCameraPicker = true
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        isShowingCameraPicker = true
+                    } else {
+                        permissionAlert = PermissionAlert(
+                            title: "카메라 권한 필요",
+                            message: "명함 촬영을 위해 카메라 권한이 필요합니다. 설정에서 권한을 허용해주세요."
+                        )
                     }
                 }
             }
+        case .denied, .restricted:
+            permissionAlert = PermissionAlert(
+                title: "카메라 권한 필요",
+                message: "명함 촬영을 위해 카메라 권한이 필요합니다. 설정에서 권한을 허용해주세요."
+            )
+        @unknown default:
+            errorMessage = "카메라 권한 상태를 확인할 수 없습니다."
+        }
+    }
+
+    private func handlePhotoLibraryTap() {
+        switch PHPhotoLibrary.authorizationStatus(for: .readWrite) {
+        case .authorized, .limited:
+            isShowingPhotoPicker = true
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+                DispatchQueue.main.async {
+                    if status == .authorized || status == .limited {
+                        isShowingPhotoPicker = true
+                    } else {
+                        permissionAlert = PermissionAlert(
+                            title: "사진 접근 권한 필요",
+                            message: "사진첩에서 명함을 선택하려면 사진 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요."
+                        )
+                    }
+                }
+            }
+        case .denied, .restricted:
+            permissionAlert = PermissionAlert(
+                title: "사진 접근 권한 필요",
+                message: "사진첩에서 명함을 선택하려면 사진 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요."
+            )
+        @unknown default:
+            errorMessage = "사진 접근 권한 상태를 확인할 수 없습니다."
         }
     }
 
@@ -127,8 +188,11 @@ struct ScanCaptureView: View {
                 jobTitle: result.jobTitle ?? "",
                 phone: result.phone ?? "",
                 email: result.email ?? "",
+                emailCandidates: result.emailCandidates,
                 address: result.address ?? "",
                 website: result.website ?? "",
+                websiteCandidates: result.websiteCandidates,
+                phoneCandidates: result.phoneCandidates,
                 memo: ""
             )
 
@@ -139,4 +203,15 @@ struct ScanCaptureView: View {
             errorMessage = "OCR 처리에 실패했습니다. 다시 시도해주세요. (\(error.localizedDescription))"
         }
     }
+
+    private func openSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
+}
+
+private struct PermissionAlert: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
 }

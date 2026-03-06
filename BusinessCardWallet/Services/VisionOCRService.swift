@@ -8,9 +8,12 @@ struct OCRExtractionResult {
     let company: String?
     let jobTitle: String?
     let phone: String?
+    let phoneCandidates: [String]
     let email: String?
+    let emailCandidates: [String]
     let address: String?
     let website: String?
+    let websiteCandidates: [String]
 }
 
 enum VisionOCRServiceError: Error {
@@ -77,44 +80,91 @@ actor VisionOCRService {
     private func parse(lines: [String]) -> OCRExtractionResult {
         let fullText = lines.joined(separator: "\n")
 
-        let phone = detectPhone(in: fullText)
-        let email = detectEmail(in: fullText)
-        let website = detectWebsite(in: fullText)
+        let phoneCandidates = detectPhoneCandidates(in: fullText)
+        let emailCandidates = detectEmailCandidates(in: fullText)
+        let websiteCandidates = detectWebsiteCandidates(in: fullText)
         let address = detectAddress(in: lines)
         let jobTitle = detectJobTitle(in: lines)
         let company = detectCompany(in: lines)
-        let name = detectName(in: lines, company: company, jobTitle: jobTitle, email: email)
+        let name = detectName(in: lines, company: company, jobTitle: jobTitle, email: emailCandidates.first)
 
         return OCRExtractionResult(
             fullText: fullText,
             name: name,
             company: company,
             jobTitle: jobTitle,
-            phone: phone,
-            email: email,
+            phone: phoneCandidates.first,
+            phoneCandidates: phoneCandidates,
+            email: emailCandidates.first,
+            emailCandidates: emailCandidates,
             address: address,
-            website: website
+            website: websiteCandidates.first,
+            websiteCandidates: websiteCandidates
         )
     }
 
-    private func detectPhone(in fullText: String) -> String? {
+    private func detectPhoneCandidates(in fullText: String) -> [String] {
+        var candidates: [String] = []
         let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.phoneNumber.rawValue)
         let nsText = fullText as NSString
         let range = NSRange(location: 0, length: nsText.length)
-        return detector?.firstMatch(in: fullText, options: [], range: range)?.phoneNumber
+
+        detector?.enumerateMatches(in: fullText, options: [], range: range) { match, _, _ in
+            guard let raw = match?.phoneNumber else { return }
+            guard let normalized = normalizePhone(raw) else { return }
+            candidates.append(normalized)
+        }
+
+        // OCR 오인식으로 detector가 누락한 케이스 보완
+        let regex = #"(?:\+?\d[\d\-\s\(\)]{7,}\d)"#
+        for raw in allMatches(regex: regex, in: fullText) {
+            guard let normalized = normalizePhone(raw) else { continue }
+            candidates.append(normalized)
+        }
+
+        return deduplicated(candidates)
     }
 
-    private func detectEmail(in fullText: String) -> String? {
+    private func detectEmailCandidates(in fullText: String) -> [String] {
+        var candidates: [String] = []
         let regex = #"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#
-        guard let found = fullText.range(of: regex, options: .regularExpression) else { return nil }
-        return String(fullText[found])
+
+        for raw in allMatches(regex: regex, in: fullText) {
+            let normalized = raw
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .trimmingCharacters(in: CharacterSet(charactersIn: ".,;:()[]{}<>"))
+                .lowercased()
+            if !normalized.isEmpty {
+                candidates.append(normalized)
+            }
+        }
+
+        return deduplicated(candidates)
     }
 
-    private func detectWebsite(in fullText: String) -> String? {
+    private func detectWebsiteCandidates(in fullText: String) -> [String] {
+        var candidates: [String] = []
         let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
         let nsText = fullText as NSString
         let range = NSRange(location: 0, length: nsText.length)
-        return detector?.firstMatch(in: fullText, options: [], range: range)?.url?.absoluteString
+
+        detector?.enumerateMatches(in: fullText, options: [], range: range) { match, _, _ in
+            guard let urlString = match?.url?.absoluteString else { return }
+            if let normalized = normalizeWebsite(urlString) {
+                candidates.append(normalized)
+            }
+        }
+
+        // 스킴 없는 도메인 후보 보완
+        let regex = #"(?:www\.)?[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:/[^\s]*)?"#
+        for raw in allMatches(regex: regex, in: fullText) {
+            if raw.contains("@") { continue }
+            if let normalized = normalizeWebsite(raw) {
+                candidates.append(normalized)
+            }
+        }
+
+        return deduplicated(candidates)
     }
 
     private func detectAddress(in lines: [String]) -> String? {
@@ -232,5 +282,83 @@ actor VisionOCRService {
         line
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func allMatches(regex: String, in text: String) -> [String] {
+        guard let regex = try? NSRegularExpression(pattern: regex) else { return [] }
+        let nsText = text as NSString
+        let range = NSRange(location: 0, length: nsText.length)
+
+        return regex.matches(in: text, options: [], range: range).compactMap { match in
+            guard match.range.location != NSNotFound else { return nil }
+            return nsText.substring(with: match.range)
+        }
+    }
+
+    private func normalizePhone(_ raw: String) -> String? {
+        let filtered = raw.filter { $0.isNumber || $0 == "+" }
+        guard !filtered.isEmpty else { return nil }
+
+        var digits = filtered
+        if digits.hasPrefix("+82") {
+            digits = "0" + String(digits.dropFirst(3))
+        } else if digits.hasPrefix("82") && digits.count >= 10 {
+            digits = "0" + String(digits.dropFirst(2))
+        }
+
+        let onlyDigits = digits.filter(\.isNumber)
+        if onlyDigits.count == 11 {
+            let a = onlyDigits.prefix(3)
+            let b = onlyDigits.dropFirst(3).prefix(4)
+            let c = onlyDigits.suffix(4)
+            return "\(a)-\(b)-\(c)"
+        }
+
+        if onlyDigits.count == 10 {
+            let a = onlyDigits.prefix(3)
+            let b = onlyDigits.dropFirst(3).prefix(3)
+            let c = onlyDigits.suffix(4)
+            return "\(a)-\(b)-\(c)"
+        }
+
+        if onlyDigits.count >= 8 && onlyDigits.count <= 15 {
+            return onlyDigits
+        }
+
+        return nil
+    }
+
+    private func normalizeWebsite(_ raw: String) -> String? {
+        var value = raw
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: ".,;:()[]{}<>"))
+            .lowercased()
+
+        guard !value.isEmpty else { return nil }
+        if value.hasPrefix("mailto:") { return nil }
+
+        if !value.hasPrefix("http://") && !value.hasPrefix("https://") {
+            value = "https://" + value
+        }
+
+        guard let url = URL(string: value), let host = url.host, host.contains(".") else {
+            return nil
+        }
+
+        return url.absoluteString
+    }
+
+    private func deduplicated(_ items: [String]) -> [String] {
+        var set = Set<String>()
+        var result: [String] = []
+
+        for item in items {
+            if !set.contains(item) {
+                set.insert(item)
+                result.append(item)
+            }
+        }
+
+        return result
     }
 }
