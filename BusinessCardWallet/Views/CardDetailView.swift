@@ -63,15 +63,25 @@ struct CardDetailView: View {
 
                 Section("기본 정보") {
                     TextField("이름", text: $name)
+                        .textInputAutocapitalization(.words)
                     TextField("회사", text: $company)
+                        .textInputAutocapitalization(.words)
                     TextField("직함", text: $jobTitle)
+                        .textInputAutocapitalization(.words)
                 }
 
                 Section("연락처") {
                     TextField("전화", text: $phone)
+                        .keyboardType(.phonePad)
                     TextField("이메일", text: $email)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
                     TextField("주소", text: $address)
                     TextField("웹사이트", text: $website)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
                 }
 
                 Section("메모") {
@@ -157,4 +167,3 @@ struct CardDetailView: View {
         return trimmed.isEmpty ? nil : trimmed
     }
 }
-
