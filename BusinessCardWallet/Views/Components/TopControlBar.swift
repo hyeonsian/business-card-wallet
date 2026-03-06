@@ -16,8 +16,11 @@ struct TopControlBar: View {
                 }
             } label: {
                 Image(systemName: "ellipsis")
-                    .frame(width: 32, height: 32)
-                    .background(.thinMaterial, in: Circle())
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .frame(width: 36, height: 36)
+                    .background(.white.opacity(0.9), in: Circle())
+                    .overlay(Circle().stroke(.black.opacity(0.07)))
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -27,16 +30,29 @@ struct TopControlBar: View {
                         Button(group.name) {
                             selectedGroupID = group.id
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(isSelected ? .blue : .gray.opacity(0.3))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(isSelected ? .white : .primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(isSelected ? .blue : .white.opacity(0.9))
+                        )
+                        .overlay(
+                            Capsule()
+                                .stroke(isSelected ? .blue : .black.opacity(0.08), lineWidth: 1)
+                        )
                     }
                 }
             }
 
             Button(action: onTapAddGroup) {
                 Image(systemName: "plus")
-                    .frame(width: 32, height: 32)
-                    .background(.thinMaterial, in: Circle())
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .frame(width: 36, height: 36)
+                    .background(.white.opacity(0.9), in: Circle())
+                    .overlay(Circle().stroke(.black.opacity(0.07)))
             }
         }
     }

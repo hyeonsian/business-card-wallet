@@ -11,49 +11,74 @@ struct WalletHomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 12) {
-                TopControlBar(
-                    groups: groups,
-                    selectedGroupID: $viewModel.selectedGroupID,
-                    sortOption: $viewModel.sortOption,
-                    onTapAddGroup: { viewModel.isPresentingAddGroup = true }
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.95, green: 0.97, blue: 1.0),
+                        Color(red: 0.98, green: 0.98, blue: 0.96)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
-                .padding(.horizontal)
+                .ignoresSafeArea()
 
-                HStack(spacing: 12) {
-                    Picker("보기", selection: $viewModel.viewMode) {
-                        ForEach(CardViewMode.allCases) { mode in
-                            Text(mode.rawValue).tag(mode)
+                VStack(spacing: 12) {
+                    VStack(spacing: 10) {
+                        TopControlBar(
+                            groups: groups,
+                            selectedGroupID: $viewModel.selectedGroupID,
+                            sortOption: $viewModel.sortOption,
+                            onTapAddGroup: { viewModel.isPresentingAddGroup = true }
+                        )
+
+                        HStack(spacing: 12) {
+                            Picker("보기", selection: $viewModel.viewMode) {
+                                ForEach(CardViewMode.allCases) { mode in
+                                    Text(mode.rawValue).tag(mode)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+
+                            Toggle("즐겨찾기", isOn: $viewModel.showFavoritesOnly)
+                                .toggleStyle(.switch)
+                                .labelsHidden()
+                                .overlay(alignment: .leading) {
+                                    Text("즐겨찾기만")
+                                        .font(.caption)
+                                        .offset(x: -62)
+                                }
                         }
                     }
-                    .pickerStyle(.segmented)
-
-                    Toggle("즐겨찾기", isOn: $viewModel.showFavoritesOnly)
-                        .toggleStyle(.switch)
-                        .labelsHidden()
-                        .overlay(alignment: .leading) {
-                            Text("즐겨찾기만")
-                                .font(.caption)
-                                .offset(x: -62)
-                        }
-                }
-                .padding(.horizontal)
-
-                TextField("이름, 회사, 이메일, 전화로 검색", text: $viewModel.searchQuery)
-                    .textFieldStyle(.roundedBorder)
+                    .padding(12)
+                    .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(.white.opacity(0.8), lineWidth: 1)
+                    )
                     .padding(.horizontal)
 
-                contentView
+                    TextField("이름, 회사, 이메일, 전화로 검색", text: $viewModel.searchQuery)
+                        .textFieldStyle(.roundedBorder)
+                        .padding(.horizontal)
 
-                Button {
-                    viewModel.isPresentingScan = true
-                } label: {
-                    Label("명함 스캔", systemImage: "camera")
-                        .frame(maxWidth: .infinity)
+                    contentView
+                        .background(.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.white.opacity(0.9), lineWidth: 1)
+                        )
+                        .padding(.horizontal)
+
+                    Button {
+                        viewModel.isPresentingScan = true
+                    } label: {
+                        Label("명함 스캔", systemImage: "camera")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.horizontal)
+                    .padding(.bottom, 6)
                 }
-                .buttonStyle(.borderedProminent)
-                .padding(.horizontal)
-                .padding(.bottom, 6)
             }
             .navigationTitle("명함 지갑")
             .onAppear(perform: ensureDefaultGroup)
