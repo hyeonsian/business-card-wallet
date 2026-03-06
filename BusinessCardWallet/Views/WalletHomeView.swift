@@ -22,6 +22,14 @@ struct WalletHomeView: View {
                 .ignoresSafeArea()
 
                 VStack(spacing: 12) {
+                    HStack {
+                        Text("명함 지갑")
+                            .font(.largeTitle.weight(.bold))
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+
                     VStack(spacing: 10) {
                         TopControlBar(
                             groups: groups,
@@ -30,23 +38,23 @@ struct WalletHomeView: View {
                             onTapAddGroup: { viewModel.isPresentingAddGroup = true }
                         )
 
-                        HStack(spacing: 12) {
-                            Picker("보기", selection: $viewModel.viewMode) {
-                                ForEach(CardViewMode.allCases) { mode in
-                                    Text(mode.rawValue).tag(mode)
-                                }
+                        Picker("보기", selection: $viewModel.viewMode) {
+                            ForEach(CardViewMode.allCases) { mode in
+                                Text(mode.rawValue).tag(mode)
                             }
-                            .pickerStyle(.segmented)
+                        }
+                        .pickerStyle(.segmented)
 
-                            Toggle("즐겨찾기", isOn: $viewModel.showFavoritesOnly)
+                        HStack(spacing: 8) {
+                            Text("즐겨찾기만")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Toggle("", isOn: $viewModel.showFavoritesOnly)
                                 .toggleStyle(.switch)
                                 .labelsHidden()
-                                .overlay(alignment: .leading) {
-                                    Text("즐겨찾기만")
-                                        .font(.caption)
-                                        .offset(x: -62)
-                                }
                         }
+                        .padding(.horizontal, 2)
                     }
                     .padding(12)
                     .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 16))
@@ -79,7 +87,7 @@ struct WalletHomeView: View {
                     .padding(.bottom, 6)
                 }
             }
-            .navigationTitle("명함 지갑")
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear(perform: ensureDefaultGroup)
             .alert("새 그룹", isPresented: $viewModel.isPresentingAddGroup) {
                 TextField("그룹 이름", text: $viewModel.newGroupName)

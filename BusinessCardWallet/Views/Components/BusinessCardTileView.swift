@@ -8,8 +8,9 @@ struct BusinessCardTileView: View {
         VStack(alignment: .leading, spacing: 14) {
             ZStack(alignment: .topLeading) {
                 LocalCardImageView(imagePath: card.imageLocalPath, fallbackPath: nil)
-                    .frame(height: 230)
+                    .aspectRatio(1.72, contentMode: .fit)
                     .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .background(.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 18))
 
                 Button(action: onToggleFavorite) {
                     Image(systemName: card.isFavorite ? "star.fill" : "star")

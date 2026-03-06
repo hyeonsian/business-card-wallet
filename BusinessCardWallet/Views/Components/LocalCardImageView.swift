@@ -12,7 +12,8 @@ struct LocalCardImageView: View {
             if let uiImage {
                 Image(uiImage: uiImage)
                     .resizable()
-                    .scaledToFill()
+                    .scaledToFit()
+                    .background(Color.white.opacity(0.9))
             } else {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(.gray.opacity(0.15))

@@ -499,7 +499,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             return
         }
 
-        let finalImage = UIImage(cgImage: cgImage)
+        let finalImage = Self.normalizedLandscapeImage(UIImage(cgImage: cgImage))
 
         DispatchQueue.main.async {
             self.onCapture(finalImage)
@@ -567,8 +567,10 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             return
         }
 
+        let normalized = Self.normalizedLandscapeImage(UIImage(cgImage: cgImage))
+
         DispatchQueue.main.async {
-            self.onCapture(UIImage(cgImage: cgImage))
+            self.onCapture(normalized)
         }
     }
 
@@ -610,6 +612,21 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         ])
 
         return exposureAdjusted
+    }
+
+    private static func normalizedLandscapeImage(_ image: UIImage) -> UIImage {
+        let candidate: UIImage
+        if image.size.height > image.size.width, let cgImage = image.cgImage {
+            candidate = UIImage(cgImage: cgImage, scale: image.scale, orientation: .right)
+        } else {
+            candidate = image
+        }
+
+        let targetSize = CGSize(width: candidate.size.width, height: candidate.size.height)
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            candidate.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
     }
 
     private func drawOverlay(for observation: VNRectangleObservation) {
