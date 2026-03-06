@@ -162,17 +162,22 @@ struct WalletHomeView: View {
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
+                .frame(minHeight: 390)
             case .list:
                 List(filteredCards) { card in
                     CardRowView(card: card) {
                         toggleFavorite(card)
                     }
+                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         selectedCard = card
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
     }

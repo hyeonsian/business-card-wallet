@@ -10,12 +10,12 @@ struct CardRowView: View {
                 imagePath: card.thumbnailLocalPath ?? card.imageLocalPath,
                 fallbackPath: card.thumbnailLocalPath == nil ? nil : card.imageLocalPath
             )
-                .frame(width: 54, height: 54)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .frame(width: 58, height: 58)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(card.name ?? "이름 없음")
-                    .font(.headline)
+                    .font(.headline.weight(.semibold))
                 Text(card.company ?? "회사 정보 없음")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -32,6 +32,12 @@ struct CardRowView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(.white.opacity(0.9), lineWidth: 1)
+        )
     }
 }
