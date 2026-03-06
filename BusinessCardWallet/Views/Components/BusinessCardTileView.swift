@@ -7,7 +7,7 @@ struct BusinessCardTileView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack(alignment: .topLeading) {
-                LocalCardImageView(imagePath: card.imageLocalPath)
+                LocalCardImageView(imagePath: card.imageLocalPath, fallbackPath: nil)
                     .frame(height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
 

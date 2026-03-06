@@ -6,7 +6,10 @@ struct CardRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            LocalCardImageView(imagePath: card.imageLocalPath)
+            LocalCardImageView(
+                imagePath: card.thumbnailLocalPath ?? card.imageLocalPath,
+                fallbackPath: card.thumbnailLocalPath == nil ? nil : card.imageLocalPath
+            )
                 .frame(width: 54, height: 54)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
 

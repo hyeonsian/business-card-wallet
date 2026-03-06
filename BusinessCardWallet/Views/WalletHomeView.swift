@@ -173,6 +173,7 @@ struct WalletHomeView: View {
         let card = BusinessCard(
             groupID: groupID,
             imageLocalPath: draft.imageLocalPath,
+            thumbnailLocalPath: draft.thumbnailLocalPath,
             fullText: draft.fullText,
             name: draft.name,
             company: draft.company,

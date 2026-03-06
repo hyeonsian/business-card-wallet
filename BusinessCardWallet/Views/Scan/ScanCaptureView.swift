@@ -115,10 +115,12 @@ struct ScanCaptureView: View {
 
         do {
             let imagePath = try ImageStore.saveJPEG(selectedImage)
+            let thumbnailPath = try ImageStore.saveThumbnailJPEG(selectedImage)
             let result = try await VisionOCRService.shared.extract(from: selectedImage)
 
             let draft = NewCardDraft(
                 imageLocalPath: imagePath,
+                thumbnailLocalPath: thumbnailPath,
                 fullText: result.fullText,
                 name: result.name ?? "",
                 company: result.company ?? "",

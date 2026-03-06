@@ -3,6 +3,7 @@ import UIKit
 
 struct LocalCardImageView: View {
     let imagePath: String
+    let fallbackPath: String?
 
     @State private var uiImage: UIImage?
 
@@ -22,16 +23,23 @@ struct LocalCardImageView: View {
                     }
             }
         }
-        .task(id: imagePath) {
+        .task(id: taskKey) {
             await loadImageIfNeeded()
         }
+    }
+
+    private var taskKey: String {
+        if let fallbackPath {
+            return "\(imagePath)|\(fallbackPath)"
+        }
+        return imagePath
     }
 
     @MainActor
     private func loadImageIfNeeded() async {
         guard uiImage == nil else { return }
 
-        let loaded = UIImage(contentsOfFile: imagePath)
+        let loaded = UIImage(contentsOfFile: imagePath) ?? fallbackPath.flatMap { UIImage(contentsOfFile: $0) }
         uiImage = loaded
     }
 }

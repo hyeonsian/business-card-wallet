@@ -16,6 +16,7 @@ enum CardViewMode: String, CaseIterable, Identifiable {
 
 struct NewCardDraft {
     var imageLocalPath: String
+    var thumbnailLocalPath: String?
     var fullText: String
     var name: String
     var company: String

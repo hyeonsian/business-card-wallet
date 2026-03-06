@@ -13,6 +13,24 @@ enum ImageStore {
         return url.path
     }
 
+    static func saveThumbnailJPEG(_ image: UIImage, maxDimension: CGFloat = 320, compressionQuality: CGFloat = 0.8) throws -> String {
+        let thumbnail = resizedImage(image, maxDimension: maxDimension)
+        return try saveJPEG(thumbnail, compressionQuality: compressionQuality)
+    }
+
+    private static func resizedImage(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+        let size = image.size
+        let largestSide = max(size.width, size.height)
+        guard largestSide > maxDimension else { return image }
+
+        let ratio = maxDimension / largestSide
+        let targetSize = CGSize(width: size.width * ratio, height: size.height * ratio)
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+    }
+
     private static func imageDirectoryURL() throws -> URL {
         let fileManager = FileManager.default
         let documents = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
