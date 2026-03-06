@@ -280,7 +280,8 @@ private struct AutoScanCameraRepresentable: UIViewControllerRepresentable {
 private final class AutoScanCameraViewController: UIViewController, @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
     private let session = AVCaptureSession()
     private let previewLayer = AVCaptureVideoPreviewLayer()
-    private let overlayLayer = CAShapeLayer()
+    private let guideLayer = CAShapeLayer()
+    private let detectedLayer = CAShapeLayer()
     private let detectionQueue = DispatchQueue(label: "camera.rectangle.detection.queue")
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     private let ciContext = CIContext(options: nil)
@@ -313,10 +314,16 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
 
-        overlayLayer.fillColor = UIColor.clear.cgColor
-        overlayLayer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.92).cgColor
-        overlayLayer.lineWidth = 3
-        view.layer.addSublayer(overlayLayer)
+        guideLayer.fillColor = UIColor.clear.cgColor
+        guideLayer.strokeColor = UIColor.white.withAlphaComponent(0.75).cgColor
+        guideLayer.lineWidth = 2
+        guideLayer.lineDashPattern = [10, 8]
+        view.layer.addSublayer(guideLayer)
+
+        detectedLayer.fillColor = UIColor.clear.cgColor
+        detectedLayer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.95).cgColor
+        detectedLayer.lineWidth = 3
+        view.layer.addSublayer(detectedLayer)
 
         configureSession()
     }
@@ -324,7 +331,9 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer.frame = view.bounds
-        overlayLayer.frame = view.bounds
+        guideLayer.frame = view.bounds
+        detectedLayer.frame = view.bounds
+        updateGuidePath()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -401,12 +410,12 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
 
         let request = VNDetectRectanglesRequest()
-        request.maximumObservations = 1
-        request.minimumConfidence = 0.75
-        request.minimumAspectRatio = 0.45
+        request.maximumObservations = 3
+        request.minimumConfidence = 0.6
+        request.minimumAspectRatio = 0.35
         request.maximumAspectRatio = 1.0
-        request.minimumSize = 0.22
-        request.quadratureTolerance = 15
+        request.minimumSize = 0.10
+        request.quadratureTolerance = 25
 
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .right, options: [:])
 
@@ -416,12 +425,12 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             return
         }
 
-        guard let rectangle = (request.results as? [VNRectangleObservation])?.first,
+        guard let rectangle = bestRectangle(from: request.results ?? []),
               isGoodCandidate(rectangle) else {
             stableFrameCount = 0
             lastBoundingBox = nil
             DispatchQueue.main.async {
-                self.overlayLayer.path = nil
+                self.detectedLayer.path = nil
             }
             return
         }
@@ -437,7 +446,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         }
         lastBoundingBox = rectangle.boundingBox
 
-        if stableFrameCount >= 6 {
+        if stableFrameCount >= 4 {
             captureCardImage(from: pixelBuffer, rectangle: rectangle)
         }
     }
@@ -445,12 +454,12 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     private func isGoodCandidate(_ observation: VNRectangleObservation) -> Bool {
         let box = observation.boundingBox
         let area = box.width * box.height
-        if area < 0.18 { return false }
+        if area < 0.08 { return false }
 
         let centerX = box.midX
         let centerY = box.midY
-        if abs(centerX - 0.5) > 0.27 { return false }
-        if abs(centerY - 0.5) > 0.32 { return false }
+        if abs(centerX - 0.5) > 0.4 { return false }
+        if abs(centerY - 0.5) > 0.4 { return false }
 
         return true
     }
@@ -458,7 +467,23 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     private func isStable(from previous: CGRect, to current: CGRect) -> Bool {
         let centerDelta = hypot(previous.midX - current.midX, previous.midY - current.midY)
         let sizeDelta = abs(previous.width - current.width) + abs(previous.height - current.height)
-        return centerDelta < 0.03 && sizeDelta < 0.06
+        return centerDelta < 0.05 && sizeDelta < 0.10
+    }
+
+    private func bestRectangle(from observations: [VNRectangleObservation]) -> VNRectangleObservation? {
+        observations
+            .filter(isGoodCandidate)
+            .max { lhs, rhs in
+                score(lhs) < score(rhs)
+            }
+    }
+
+    private func score(_ observation: VNRectangleObservation) -> CGFloat {
+        let box = observation.boundingBox
+        let area = box.width * box.height
+        let centerDistance = hypot(box.midX - 0.5, box.midY - 0.5)
+        let aspectPenalty = abs((box.height / max(box.width, 0.001)) - 0.55)
+        return area * 2 - centerDistance - aspectPenalty * 0.15
     }
 
     private func captureCardImage(from pixelBuffer: CVPixelBuffer, rectangle: VNRectangleObservation) {
@@ -526,7 +551,20 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         path.addLine(to: bottomLeft)
         path.close()
 
-        overlayLayer.path = path.cgPath
+        detectedLayer.path = path.cgPath
+    }
+
+    private func updateGuidePath() {
+        let guideRect = guideRectInView()
+        guideLayer.path = UIBezierPath(roundedRect: guideRect, cornerRadius: 16).cgPath
+    }
+
+    private func guideRectInView() -> CGRect {
+        let width = view.bounds.width * 0.84
+        let height = width / 1.72
+        let x = (view.bounds.width - width) * 0.5
+        let y = (view.bounds.height - height) * 0.5
+        return CGRect(x: x, y: y, width: width, height: height)
     }
 
     private func previewPoint(from normalizedVisionPoint: CGPoint) -> CGPoint {
