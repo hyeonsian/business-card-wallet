@@ -64,7 +64,7 @@ struct WalletHomeView: View {
                 Text("그룹 이름을 입력하세요")
             }
             .sheet(isPresented: $viewModel.isPresentingScan) {
-                ScanCapturePlaceholderView { draft in
+                ScanCaptureView { draft in
                     viewModel.pendingDraft = draft
                     viewModel.isPresentingScan = false
                     viewModel.isPresentingOCRReview = true

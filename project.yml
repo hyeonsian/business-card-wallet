@@ -1,0 +1,25 @@
+name: BusinessCardWallet
+options:
+  bundleIdPrefix: com.hyeonsian
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    PRODUCT_NAME: BusinessCardWallet
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0
+targets:
+  BusinessCardWallet:
+    type: application
+    platform: iOS
+    sources:
+      - path: BusinessCardWallet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hyeonsian.businesscardwallet
+        INFOPLIST_FILE: BusinessCardWallet/Info.plist
+        CODE_SIGN_STYLE: Automatic
+    scheme:
+      testTargets: []

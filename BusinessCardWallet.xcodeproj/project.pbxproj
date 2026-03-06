@@ -1,0 +1,391 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04AE8B914EB7A628203953B4 /* CameraPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A47CEE1FAA8BF49D2271B0DE /* CameraPickerView.swift */; };
+		0CD3A7A62348941096B2CCE1 /* CardGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE058CC8613D6F61C77B2728 /* CardGroup.swift */; };
+		1FA5F697F45F5B2499011388 /* WalletHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DA083E4940D3993DDA3169 /* WalletHomeViewModel.swift */; };
+		2C2EDC3F0EBAFFC35A36A60C /* ViewOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A776FDA10685012F3FEEEF8 /* ViewOptions.swift */; };
+		40E16FE0F97C85743EB2506E /* VisionOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACA7E168D7028CD22E2BCD4 /* VisionOCRService.swift */; };
+		4AB9D94DC18439CF76EDD829 /* CardRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BAD932061601FD724E075AB /* CardRowView.swift */; };
+		4B55418CA1C0B3C45799E3E5 /* TopControlBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDAECE9AD91721803F47EFD6 /* TopControlBar.swift */; };
+		71DF69B79DB855E3C066A886 /* BusinessCardTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192943C09D813786E3DDFDCD /* BusinessCardTileView.swift */; };
+		A36EA31E2C38E1FE37A2E2BD /* ImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77B21A3902F42B0FBA0DDE3B /* ImageStore.swift */; };
+		A4B38BEAF52E14B7F07F6492 /* ScanCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BD308D3625FD61DB0E1A27 /* ScanCaptureView.swift */; };
+		A99E9C18B0B956CC484B7AB3 /* BusinessCardWalletApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB76388B08931FD968AEF93 /* BusinessCardWalletApp.swift */; };
+		ADD23D8F34D997AEB7AA9FD4 /* OCRReviewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA76C2EAEBA6692555CF9CDA /* OCRReviewEditView.swift */; };
+		E9589346B79A4F24DC96D038 /* WalletHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D238B226179F439CCF9CDBD /* WalletHomeView.swift */; };
+		EEB00876AE6CABE74DEA490A /* BusinessCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DFCFF904A0ABBE4266B3FE1 /* BusinessCard.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		192943C09D813786E3DDFDCD /* BusinessCardTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCardTileView.swift; sourceTree = "<group>"; };
+		3BAD932061601FD724E075AB /* CardRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRowView.swift; sourceTree = "<group>"; };
+		42BD308D3625FD61DB0E1A27 /* ScanCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanCaptureView.swift; sourceTree = "<group>"; };
+		4A776FDA10685012F3FEEEF8 /* ViewOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewOptions.swift; sourceTree = "<group>"; };
+		5D238B226179F439CCF9CDBD /* WalletHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletHomeView.swift; sourceTree = "<group>"; };
+		77B21A3902F42B0FBA0DDE3B /* ImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageStore.swift; sourceTree = "<group>"; };
+		7DFCFF904A0ABBE4266B3FE1 /* BusinessCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCard.swift; sourceTree = "<group>"; };
+		81DA083E4940D3993DDA3169 /* WalletHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletHomeViewModel.swift; sourceTree = "<group>"; };
+		9EB76388B08931FD968AEF93 /* BusinessCardWalletApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCardWalletApp.swift; sourceTree = "<group>"; };
+		A47CEE1FAA8BF49D2271B0DE /* CameraPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPickerView.swift; sourceTree = "<group>"; };
+		AACA7E168D7028CD22E2BCD4 /* VisionOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionOCRService.swift; sourceTree = "<group>"; };
+		B684DC44E4083CB5E84C1F05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DA76C2EAEBA6692555CF9CDA /* OCRReviewEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRReviewEditView.swift; sourceTree = "<group>"; };
+		EDAECE9AD91721803F47EFD6 /* TopControlBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopControlBar.swift; sourceTree = "<group>"; };
+		EE058CC8613D6F61C77B2728 /* CardGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGroup.swift; sourceTree = "<group>"; };
+		F514CDBA54CAF2FC11272C42 /* BusinessCardWallet.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BusinessCardWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0EC7324A817A8393909470D4 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				5D238B226179F439CCF9CDBD /* WalletHomeView.swift */,
+				2D98E94336B0CB724861B695 /* Components */,
+				B67C9C49E8E30815257C847C /* Scan */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		1EB6911F2EECB5CC46A42193 /* BusinessCardWallet */ = {
+			isa = PBXGroup;
+			children = (
+				9EB76388B08931FD968AEF93 /* BusinessCardWalletApp.swift */,
+				B684DC44E4083CB5E84C1F05 /* Info.plist */,
+				A7F87B2400E6EE9766B078BD /* Models */,
+				A65C24C2C8824143C7271778 /* Services */,
+				24596AD336F92A91955FB779 /* ViewModels */,
+				0EC7324A817A8393909470D4 /* Views */,
+			);
+			path = BusinessCardWallet;
+			sourceTree = "<group>";
+		};
+		220464289CA1C493C67D189A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F514CDBA54CAF2FC11272C42 /* BusinessCardWallet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		24596AD336F92A91955FB779 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				81DA083E4940D3993DDA3169 /* WalletHomeViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		2D98E94336B0CB724861B695 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				192943C09D813786E3DDFDCD /* BusinessCardTileView.swift */,
+				3BAD932061601FD724E075AB /* CardRowView.swift */,
+				EDAECE9AD91721803F47EFD6 /* TopControlBar.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A65C24C2C8824143C7271778 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				77B21A3902F42B0FBA0DDE3B /* ImageStore.swift */,
+				AACA7E168D7028CD22E2BCD4 /* VisionOCRService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A7F87B2400E6EE9766B078BD /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				7DFCFF904A0ABBE4266B3FE1 /* BusinessCard.swift */,
+				EE058CC8613D6F61C77B2728 /* CardGroup.swift */,
+				4A776FDA10685012F3FEEEF8 /* ViewOptions.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B67C9C49E8E30815257C847C /* Scan */ = {
+			isa = PBXGroup;
+			children = (
+				A47CEE1FAA8BF49D2271B0DE /* CameraPickerView.swift */,
+				DA76C2EAEBA6692555CF9CDA /* OCRReviewEditView.swift */,
+				42BD308D3625FD61DB0E1A27 /* ScanCaptureView.swift */,
+			);
+			path = Scan;
+			sourceTree = "<group>";
+		};
+		E90FA20B0AAB5D9C37DF24FF = {
+			isa = PBXGroup;
+			children = (
+				1EB6911F2EECB5CC46A42193 /* BusinessCardWallet */,
+				220464289CA1C493C67D189A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EA69A44C1A9E88006C8D735B /* BusinessCardWallet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0B742A359359383D979C9145 /* Build configuration list for PBXNativeTarget "BusinessCardWallet" */;
+			buildPhases = (
+				1923D220F29E05C65C0A657F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BusinessCardWallet;
+			packageProductDependencies = (
+			);
+			productName = BusinessCardWallet;
+			productReference = F514CDBA54CAF2FC11272C42 /* BusinessCardWallet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E160A5E2FA0D4747331269D8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					EA69A44C1A9E88006C8D735B = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = AF156B70EE72BD8E775A6167 /* Build configuration list for PBXProject "BusinessCardWallet" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E90FA20B0AAB5D9C37DF24FF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 220464289CA1C493C67D189A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EA69A44C1A9E88006C8D735B /* BusinessCardWallet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1923D220F29E05C65C0A657F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EEB00876AE6CABE74DEA490A /* BusinessCard.swift in Sources */,
+				71DF69B79DB855E3C066A886 /* BusinessCardTileView.swift in Sources */,
+				A99E9C18B0B956CC484B7AB3 /* BusinessCardWalletApp.swift in Sources */,
+				04AE8B914EB7A628203953B4 /* CameraPickerView.swift in Sources */,
+				0CD3A7A62348941096B2CCE1 /* CardGroup.swift in Sources */,
+				4AB9D94DC18439CF76EDD829 /* CardRowView.swift in Sources */,
+				A36EA31E2C38E1FE37A2E2BD /* ImageStore.swift in Sources */,
+				ADD23D8F34D997AEB7AA9FD4 /* OCRReviewEditView.swift in Sources */,
+				A4B38BEAF52E14B7F07F6492 /* ScanCaptureView.swift in Sources */,
+				4B55418CA1C0B3C45799E3E5 /* TopControlBar.swift in Sources */,
+				2C2EDC3F0EBAFFC35A36A60C /* ViewOptions.swift in Sources */,
+				40E16FE0F97C85743EB2506E /* VisionOCRService.swift in Sources */,
+				E9589346B79A4F24DC96D038 /* WalletHomeView.swift in Sources */,
+				1FA5F697F45F5B2499011388 /* WalletHomeViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2849F55443D67A45ABF3212E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = BusinessCardWallet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hyeonsian.businesscardwallet;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3C11AEA7D444FFE9228C1AED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = BusinessCardWallet;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		60C104A8F458A1E8FD7076A3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = BusinessCardWallet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hyeonsian.businesscardwallet;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F354293CF63DC60C2E1650C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = BusinessCardWallet;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0B742A359359383D979C9145 /* Build configuration list for PBXNativeTarget "BusinessCardWallet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				60C104A8F458A1E8FD7076A3 /* Debug */,
+				2849F55443D67A45ABF3212E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AF156B70EE72BD8E775A6167 /* Build configuration list for PBXProject "BusinessCardWallet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C11AEA7D444FFE9228C1AED /* Debug */,
+				F354293CF63DC60C2E1650C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E160A5E2FA0D4747331269D8 /* Project object */;
+}
