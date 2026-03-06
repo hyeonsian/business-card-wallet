@@ -14,6 +14,7 @@ struct CardDetailView: View {
     @State private var email: String
     @State private var address: String
     @State private var website: String
+    @State private var parkingInfo: String
     @State private var memo: String
 
     @State private var scaleBase: CGFloat = 1
@@ -30,6 +31,7 @@ struct CardDetailView: View {
         _email = State(initialValue: card.email ?? "")
         _address = State(initialValue: card.address ?? "")
         _website = State(initialValue: card.website ?? "")
+        _parkingInfo = State(initialValue: card.parkingInfo ?? "")
         _memo = State(initialValue: card.memo ?? "")
     }
 
@@ -82,6 +84,7 @@ struct CardDetailView: View {
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                    TextField("주차 정보", text: $parkingInfo)
                 }
 
                 Section("메모") {
@@ -139,6 +142,7 @@ struct CardDetailView: View {
         card.email = normalizedOptional(email)
         card.address = normalizedOptional(address)
         card.website = normalizedOptional(website)
+        card.parkingInfo = normalizedOptional(parkingInfo)
         card.memo = normalizedOptional(memo)
         card.updatedAt = .now
 

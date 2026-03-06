@@ -14,6 +14,8 @@ struct OCRExtractionResult {
     let address: String?
     let website: String?
     let websiteCandidates: [String]
+    let parkingInfo: String?
+    let parkingCandidates: [String]
 }
 
 enum VisionOCRServiceError: Error {
@@ -36,6 +38,10 @@ actor VisionOCRService {
     private let addressKeywords = [
         "street", "st.", "road", "rd.", "ave", "city", "district", "building", "floor",
         "시", "도", "구", "군", "동", "읍", "면", "로", "길"
+    ]
+
+    private let parkingKeywords = [
+        "parking", "park", "주차", "무료주차", "주차장", "주차가능", "valet"
     ]
 
     func extract(from image: UIImage) async throws -> OCRExtractionResult {
@@ -83,6 +89,8 @@ actor VisionOCRService {
         let phoneCandidates = detectPhoneCandidates(in: fullText)
         let emailCandidates = detectEmailCandidates(in: fullText)
         let websiteCandidates = detectWebsiteCandidates(in: fullText)
+        let parkingCandidates = detectParkingCandidates(in: lines)
+
         let address = detectAddress(in: lines)
         let jobTitle = detectJobTitle(in: lines)
         let company = detectCompany(in: lines)
@@ -99,7 +107,9 @@ actor VisionOCRService {
             emailCandidates: emailCandidates,
             address: address,
             website: websiteCandidates.first,
-            websiteCandidates: websiteCandidates
+            websiteCandidates: websiteCandidates,
+            parkingInfo: parkingCandidates.first,
+            parkingCandidates: parkingCandidates
         )
     }
 
@@ -115,7 +125,6 @@ actor VisionOCRService {
             candidates.append(normalized)
         }
 
-        // OCR 오인식으로 detector가 누락한 케이스 보완
         let regex = #"(?:\+?\d[\d\-\s\(\)]{7,}\d)"#
         for raw in allMatches(regex: regex, in: fullText) {
             guard let normalized = normalizePhone(raw) else { continue }
@@ -155,7 +164,6 @@ actor VisionOCRService {
             }
         }
 
-        // 스킴 없는 도메인 후보 보완
         let regex = #"(?:www\.)?[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:/[^\s]*)?"#
         for raw in allMatches(regex: regex, in: fullText) {
             if raw.contains("@") { continue }
@@ -165,6 +173,14 @@ actor VisionOCRService {
         }
 
         return deduplicated(candidates)
+    }
+
+    private func detectParkingCandidates(in lines: [String]) -> [String] {
+        let rawCandidates = lines.filter { containsAny($0, keywords: parkingKeywords) }
+        let cleaned = rawCandidates.map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return deduplicated(cleaned.filter { !$0.isEmpty })
     }
 
     private func detectAddress(in lines: [String]) -> String? {
@@ -203,6 +219,7 @@ actor VisionOCRService {
         let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return -100 }
         if containsAny(trimmed, keywords: addressKeywords) { return -50 }
+        if containsAny(trimmed, keywords: parkingKeywords) { return -50 }
         if containsAny(trimmed, keywords: companyKeywords) { return -40 }
         if containsAny(trimmed, keywords: titleKeywords) { return -30 }
         if trimmed.contains("@") || trimmed.lowercased().contains("www") || trimmed.contains("http") { return -100 }

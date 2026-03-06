@@ -20,32 +20,33 @@ struct BusinessCardTileView: View {
                 .padding(10)
             }
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text(card.name ?? "이름 없음")
                     .font(.title3.weight(.semibold))
+
                 Text(card.company ?? "회사 정보 없음")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+
                 if let jobTitle = card.jobTitle, !jobTitle.isEmpty {
-                    HStack(spacing: 6) {
-                        Image(systemName: "briefcase.fill")
-                            .font(.caption)
-                        Text(jobTitle)
-                            .font(.footnote.weight(.medium))
-                    }
-                    .foregroundStyle(.blue)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.blue.opacity(0.12), in: Capsule())
+                    labelChip(system: "briefcase.fill", text: jobTitle, tint: .blue)
                 }
 
-                HStack(spacing: 8) {
-                    if let phone = card.phone, !phone.isEmpty {
-                        infoChip(system: "phone.fill", text: phone)
-                    }
-                    if let email = card.email, !email.isEmpty {
-                        infoChip(system: "envelope.fill", text: email)
-                    }
+                VStack(alignment: .leading, spacing: 8) {
+                    infoRow(system: "phone.fill", title: "전화", value: card.phone)
+                    infoRow(system: "envelope.fill", title: "이메일", value: card.email)
+                    infoRow(system: "location.fill", title: "주소", value: card.address)
+                    infoRow(system: "globe", title: "웹사이트", value: card.website)
+                    infoRow(system: "parkingsign.circle.fill", title: "주차", value: card.parkingInfo)
+                }
+                .padding(10)
+                .background(.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+
+                if let memo = card.memo, !memo.isEmpty {
+                    Text(memo)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
                 }
             }
             .padding(.horizontal, 4)
@@ -59,16 +60,32 @@ struct BusinessCardTileView: View {
         .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 10)
     }
 
-    private func infoChip(system: String, text: String) -> some View {
-        HStack(spacing: 4) {
+    private func labelChip(system: String, text: String, tint: Color) -> some View {
+        HStack(spacing: 6) {
             Image(systemName: system)
+                .font(.caption)
             Text(text)
-                .lineLimit(1)
+                .font(.footnote.weight(.medium))
         }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(.black.opacity(0.05), in: Capsule())
+        .foregroundStyle(tint)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(tint.opacity(0.12), in: Capsule())
+    }
+
+    @ViewBuilder
+    private func infoRow(system: String, title: String, value: String?) -> some View {
+        if let value, !value.isEmpty {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: system)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 14, alignment: .center)
+                Text("\(title)  \(value)")
+                    .font(.footnote)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+            }
+        }
     }
 }

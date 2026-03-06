@@ -28,5 +28,7 @@ struct NewCardDraft {
     var website: String
     var websiteCandidates: [String]
     var phoneCandidates: [String]
+    var parkingInfo: String
+    var parkingCandidates: [String]
     var memo: String
 }

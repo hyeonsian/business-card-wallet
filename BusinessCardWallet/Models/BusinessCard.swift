@@ -16,6 +16,7 @@ final class BusinessCard {
     var email: String?
     var address: String?
     var website: String?
+    var parkingInfo: String?
     var memo: String?
 
     var isFavorite: Bool
@@ -35,6 +36,7 @@ final class BusinessCard {
         email: String? = nil,
         address: String? = nil,
         website: String? = nil,
+        parkingInfo: String? = nil,
         memo: String? = nil,
         isFavorite: Bool = false,
         createdAt: Date = .now,
@@ -52,6 +54,7 @@ final class BusinessCard {
         self.email = email
         self.address = address
         self.website = website
+        self.parkingInfo = parkingInfo
         self.memo = memo
         self.isFavorite = isFavorite
         self.createdAt = createdAt

@@ -7,7 +7,6 @@ struct WalletHomeView: View {
     @Query private var cards: [BusinessCard]
 
     @StateObject private var viewModel = WalletHomeViewModel()
-    @State private var selectedCard: BusinessCard?
 
     var body: some View {
         NavigationStack {
@@ -104,9 +103,6 @@ struct WalletHomeView: View {
                     }
                 }
             }
-            .sheet(item: $selectedCard) { card in
-                CardDetailView(card: card)
-            }
         }
     }
 
@@ -124,9 +120,17 @@ struct WalletHomeView: View {
         let query = viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if !query.isEmpty {
             result = result.filter { card in
-                [card.name, card.company, card.jobTitle, card.phone, card.email, card.fullText]
-                    .compactMap { $0?.lowercased() }
-                    .contains { $0.contains(query) }
+                [
+                    card.name,
+                    card.company,
+                    card.jobTitle,
+                    card.phone,
+                    card.email,
+                    card.parkingInfo,
+                    card.fullText
+                ]
+                .compactMap { $0?.lowercased() }
+                .contains { $0.contains(query) }
             }
         }
 
@@ -156,13 +160,10 @@ struct WalletHomeView: View {
                             toggleFavorite(card)
                         }
                         .padding(.horizontal, 10)
-                        .onTapGesture {
-                            selectedCard = card
-                        }
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
-                .frame(minHeight: 390)
+                .frame(minHeight: 520)
             case .list:
                 List(filteredCards) { card in
                     CardRowView(card: card) {
@@ -171,10 +172,6 @@ struct WalletHomeView: View {
                     .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selectedCard = card
-                    }
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
@@ -223,6 +220,7 @@ struct WalletHomeView: View {
             email: draft.email,
             address: draft.address,
             website: draft.website,
+            parkingInfo: draft.parkingInfo,
             memo: draft.memo
         )
 

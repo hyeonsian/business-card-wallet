@@ -31,7 +31,11 @@ struct OCRReviewEditView: View {
                         .autocorrectionDisabled()
                 }
 
-                if !draft.phoneCandidates.isEmpty || !draft.emailCandidates.isEmpty || !draft.websiteCandidates.isEmpty {
+                Section("추가 정보") {
+                    TextField("주차 정보", text: $draft.parkingInfo)
+                }
+
+                if !draft.phoneCandidates.isEmpty || !draft.emailCandidates.isEmpty || !draft.websiteCandidates.isEmpty || !draft.parkingCandidates.isEmpty {
                     Section("후보 적용") {
                         if !draft.phoneCandidates.isEmpty {
                             candidatePickerRow(
@@ -57,6 +61,15 @@ struct OCRReviewEditView: View {
                                 candidates: draft.websiteCandidates
                             ) { selected in
                                 draft.website = selected
+                            }
+                        }
+
+                        if !draft.parkingCandidates.isEmpty {
+                            candidatePickerRow(
+                                title: "주차 후보",
+                                candidates: draft.parkingCandidates
+                            ) { selected in
+                                draft.parkingInfo = selected
                             }
                         }
                     }
@@ -108,6 +121,7 @@ struct OCRReviewEditView: View {
         result.email = normalize(result.email).lowercased()
         result.address = normalize(result.address)
         result.website = normalize(result.website).lowercased()
+        result.parkingInfo = normalize(result.parkingInfo)
         result.memo = normalize(result.memo)
         return result
     }

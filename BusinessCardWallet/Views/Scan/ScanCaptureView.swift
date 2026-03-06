@@ -2,13 +2,15 @@ import SwiftUI
 import UIKit
 import AVFoundation
 import Photos
+import Vision
+import CoreImage
 
 struct ScanCaptureView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedImage: UIImage?
 
-    @State private var isShowingCameraPicker = false
+    @State private var isShowingAutoScanner = false
     @State private var isShowingPhotoPicker = false
     @State private var isProcessing = false
     @State private var errorMessage: String?
@@ -36,7 +38,7 @@ struct ScanCaptureView: View {
                                     Image(systemName: "person.text.rectangle")
                                         .font(.system(size: 52))
                                         .foregroundStyle(.secondary)
-                                    Text("명함 이미지를 촬영하거나 선택하세요")
+                                    Text("명함을 가이드 안에 두면 자동으로 스캔됩니다")
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                 }
@@ -92,8 +94,19 @@ struct ScanCaptureView: View {
                     Button("닫기") { dismiss() }
                 }
             }
-            .sheet(isPresented: $isShowingCameraPicker) {
-                CameraPickerView(selectedImage: $selectedImage, sourceType: .camera)
+            .fullScreenCover(isPresented: $isShowingAutoScanner) {
+                AutoScanCameraContainer(
+                    onCancel: { isShowingAutoScanner = false },
+                    onCapture: { image in
+                        selectedImage = image
+                        isShowingAutoScanner = false
+                        Task { await runOCRIfPossible() }
+                    },
+                    onError: { message in
+                        isShowingAutoScanner = false
+                        errorMessage = message
+                    }
+                )
             }
             .sheet(isPresented: $isShowingPhotoPicker) {
                 CameraPickerView(selectedImage: $selectedImage, sourceType: .photoLibrary)
@@ -117,12 +130,12 @@ struct ScanCaptureView: View {
 
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
-            isShowingCameraPicker = true
+            isShowingAutoScanner = true
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { granted in
                 DispatchQueue.main.async {
                     if granted {
-                        isShowingCameraPicker = true
+                        isShowingAutoScanner = true
                     } else {
                         permissionAlert = PermissionAlert(
                             title: "카메라 권한 필요",
@@ -171,6 +184,8 @@ struct ScanCaptureView: View {
     @MainActor
     private func runOCRIfPossible() async {
         guard let selectedImage else { return }
+        guard !isProcessing else { return }
+
         isProcessing = true
         errorMessage = nil
 
@@ -193,6 +208,8 @@ struct ScanCaptureView: View {
                 website: result.website ?? "",
                 websiteCandidates: result.websiteCandidates,
                 phoneCandidates: result.phoneCandidates,
+                parkingInfo: result.parkingInfo ?? "",
+                parkingCandidates: result.parkingCandidates,
                 memo: ""
             )
 
@@ -214,4 +231,306 @@ private struct PermissionAlert: Identifiable {
     let id = UUID()
     let title: String
     let message: String
+}
+
+private struct AutoScanCameraContainer: View {
+    let onCancel: () -> Void
+    let onCapture: (UIImage) -> Void
+    let onError: (String) -> Void
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            AutoScanCameraRepresentable(onCapture: onCapture, onError: onError)
+                .ignoresSafeArea()
+
+            VStack(spacing: 12) {
+                HStack {
+                    Button("닫기") {
+                        onCancel()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial, in: Capsule())
+
+                    Spacer()
+                }
+
+                Text("명함을 프레임 안에 맞추면 자동 스캔됩니다")
+                    .font(.footnote.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+            .padding()
+        }
+    }
+}
+
+private struct AutoScanCameraRepresentable: UIViewControllerRepresentable {
+    let onCapture: (UIImage) -> Void
+    let onError: (String) -> Void
+
+    func makeUIViewController(context: Context) -> AutoScanCameraViewController {
+        AutoScanCameraViewController(onCapture: onCapture, onError: onError)
+    }
+
+    func updateUIViewController(_ uiViewController: AutoScanCameraViewController, context: Context) {}
+}
+
+private final class AutoScanCameraViewController: UIViewController, @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
+    private let session = AVCaptureSession()
+    private let previewLayer = AVCaptureVideoPreviewLayer()
+    private let overlayLayer = CAShapeLayer()
+    private let detectionQueue = DispatchQueue(label: "camera.rectangle.detection.queue")
+    private let sessionQueue = DispatchQueue(label: "camera.session.queue")
+    private let ciContext = CIContext(options: nil)
+
+    private var isDetectingFrame = false
+    private var hasCapturedImage = false
+    private var frameCounter = 0
+    private var stableFrameCount = 0
+    private var lastBoundingBox: CGRect?
+
+    private let onCapture: (UIImage) -> Void
+    private let onError: (String) -> Void
+
+    init(onCapture: @escaping (UIImage) -> Void, onError: @escaping (String) -> Void) {
+        self.onCapture = onCapture
+        self.onError = onError
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+
+        previewLayer.session = session
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+
+        overlayLayer.fillColor = UIColor.clear.cgColor
+        overlayLayer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.92).cgColor
+        overlayLayer.lineWidth = 3
+        view.layer.addSublayer(overlayLayer)
+
+        configureSession()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer.frame = view.bounds
+        overlayLayer.frame = view.bounds
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        sessionQueue.async {
+            if !self.session.isRunning {
+                self.session.startRunning()
+            }
+        }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        sessionQueue.async {
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
+        }
+    }
+
+    private func configureSession() {
+        session.beginConfiguration()
+        session.sessionPreset = .high
+
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            session.commitConfiguration()
+            onError("후면 카메라를 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+            let input = try AVCaptureDeviceInput(device: device)
+            if session.canAddInput(input) {
+                session.addInput(input)
+            }
+        } catch {
+            session.commitConfiguration()
+            onError("카메라 입력을 구성하지 못했습니다. (\(error.localizedDescription))")
+            return
+        }
+
+        let videoOutput = AVCaptureVideoDataOutput()
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+
+        if session.canAddOutput(videoOutput) {
+            session.addOutput(videoOutput)
+        }
+
+        if let connection = videoOutput.connection(with: .video), connection.isVideoOrientationSupported {
+            connection.videoOrientation = .portrait
+        }
+
+        videoOutput.setSampleBufferDelegate(self, queue: detectionQueue)
+
+        session.commitConfiguration()
+    }
+
+    func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        guard !hasCapturedImage else { return }
+        frameCounter += 1
+        if frameCounter % 2 != 0 { return }
+
+        guard !isDetectingFrame else { return }
+        isDetectingFrame = true
+        defer { isDetectingFrame = false }
+
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+
+        let request = VNDetectRectanglesRequest()
+        request.maximumObservations = 1
+        request.minimumConfidence = 0.75
+        request.minimumAspectRatio = 0.45
+        request.maximumAspectRatio = 1.0
+        request.minimumSize = 0.22
+        request.quadratureTolerance = 15
+
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .right, options: [:])
+
+        do {
+            try handler.perform([request])
+        } catch {
+            return
+        }
+
+        guard let rectangle = (request.results as? [VNRectangleObservation])?.first,
+              isGoodCandidate(rectangle) else {
+            stableFrameCount = 0
+            lastBoundingBox = nil
+            DispatchQueue.main.async {
+                self.overlayLayer.path = nil
+            }
+            return
+        }
+
+        DispatchQueue.main.async {
+            self.drawOverlay(for: rectangle)
+        }
+
+        if let previous = lastBoundingBox, isStable(from: previous, to: rectangle.boundingBox) {
+            stableFrameCount += 1
+        } else {
+            stableFrameCount = 1
+        }
+        lastBoundingBox = rectangle.boundingBox
+
+        if stableFrameCount >= 6 {
+            captureCardImage(from: pixelBuffer, rectangle: rectangle)
+        }
+    }
+
+    private func isGoodCandidate(_ observation: VNRectangleObservation) -> Bool {
+        let box = observation.boundingBox
+        let area = box.width * box.height
+        if area < 0.18 { return false }
+
+        let centerX = box.midX
+        let centerY = box.midY
+        if abs(centerX - 0.5) > 0.27 { return false }
+        if abs(centerY - 0.5) > 0.32 { return false }
+
+        return true
+    }
+
+    private func isStable(from previous: CGRect, to current: CGRect) -> Bool {
+        let centerDelta = hypot(previous.midX - current.midX, previous.midY - current.midY)
+        let sizeDelta = abs(previous.width - current.width) + abs(previous.height - current.height)
+        return centerDelta < 0.03 && sizeDelta < 0.06
+    }
+
+    private func captureCardImage(from pixelBuffer: CVPixelBuffer, rectangle: VNRectangleObservation) {
+        guard !hasCapturedImage else { return }
+        hasCapturedImage = true
+
+        let cameraImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
+        let processed = Self.perspectiveAndColorAdjusted(ciImage: cameraImage, rectangle: rectangle) ?? cameraImage
+
+        guard let cgImage = ciContext.createCGImage(processed, from: processed.extent) else {
+            hasCapturedImage = false
+            DispatchQueue.main.async {
+                self.onError("스캔 이미지를 생성하지 못했습니다. 다시 시도해주세요.")
+            }
+            return
+        }
+
+        let finalImage = UIImage(cgImage: cgImage)
+
+        DispatchQueue.main.async {
+            self.onCapture(finalImage)
+        }
+    }
+
+    private static func perspectiveAndColorAdjusted(ciImage: CIImage, rectangle: VNRectangleObservation) -> CIImage? {
+        let extent = ciImage.extent
+
+        func mapPoint(_ point: CGPoint) -> CGPoint {
+            CGPoint(
+                x: extent.origin.x + point.x * extent.width,
+                y: extent.origin.y + point.y * extent.height
+            )
+        }
+
+        let corrected = ciImage.applyingFilter("CIPerspectiveCorrection", parameters: [
+            "inputTopLeft": CIVector(cgPoint: mapPoint(rectangle.topLeft)),
+            "inputTopRight": CIVector(cgPoint: mapPoint(rectangle.topRight)),
+            "inputBottomLeft": CIVector(cgPoint: mapPoint(rectangle.bottomLeft)),
+            "inputBottomRight": CIVector(cgPoint: mapPoint(rectangle.bottomRight))
+        ])
+
+        let colorAdjusted = corrected.applyingFilter("CIColorControls", parameters: [
+            kCIInputSaturationKey: 1.03,
+            kCIInputContrastKey: 1.08,
+            kCIInputBrightnessKey: 0.01
+        ])
+
+        let exposureAdjusted = colorAdjusted.applyingFilter("CIExposureAdjust", parameters: [
+            kCIInputEVKey: 0.10
+        ])
+
+        return exposureAdjusted
+    }
+
+    private func drawOverlay(for observation: VNRectangleObservation) {
+        let topLeft = previewPoint(from: observation.topLeft)
+        let topRight = previewPoint(from: observation.topRight)
+        let bottomRight = previewPoint(from: observation.bottomRight)
+        let bottomLeft = previewPoint(from: observation.bottomLeft)
+
+        let path = UIBezierPath()
+        path.move(to: topLeft)
+        path.addLine(to: topRight)
+        path.addLine(to: bottomRight)
+        path.addLine(to: bottomLeft)
+        path.close()
+
+        overlayLayer.path = path.cgPath
+    }
+
+    private func previewPoint(from normalizedVisionPoint: CGPoint) -> CGPoint {
+        let capturePoint = CGPoint(x: normalizedVisionPoint.x, y: 1 - normalizedVisionPoint.y)
+        return previewLayer.layerPointConverted(fromCaptureDevicePoint: capturePoint)
+    }
 }
