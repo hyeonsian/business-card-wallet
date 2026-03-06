@@ -6,10 +6,9 @@ struct CardRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.gray.opacity(0.2))
+            LocalCardImageView(imagePath: card.imageLocalPath)
                 .frame(width: 54, height: 54)
-                .overlay(Image(systemName: "person.text.rectangle"))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(card.name ?? "이름 없음")

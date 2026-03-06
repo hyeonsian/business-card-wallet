@@ -19,6 +19,7 @@
 		A4B38BEAF52E14B7F07F6492 /* ScanCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BD308D3625FD61DB0E1A27 /* ScanCaptureView.swift */; };
 		A99E9C18B0B956CC484B7AB3 /* BusinessCardWalletApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB76388B08931FD968AEF93 /* BusinessCardWalletApp.swift */; };
 		ADD23D8F34D997AEB7AA9FD4 /* OCRReviewEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA76C2EAEBA6692555CF9CDA /* OCRReviewEditView.swift */; };
+		D23232C5A79B29B54962E6F2 /* LocalCardImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9335C13AD64F99A44D02D8EF /* LocalCardImageView.swift */; };
 		E9589346B79A4F24DC96D038 /* WalletHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D238B226179F439CCF9CDBD /* WalletHomeView.swift */; };
 		EEB00876AE6CABE74DEA490A /* BusinessCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DFCFF904A0ABBE4266B3FE1 /* BusinessCard.swift */; };
 /* End PBXBuildFile section */
@@ -32,6 +33,7 @@
 		77B21A3902F42B0FBA0DDE3B /* ImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageStore.swift; sourceTree = "<group>"; };
 		7DFCFF904A0ABBE4266B3FE1 /* BusinessCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCard.swift; sourceTree = "<group>"; };
 		81DA083E4940D3993DDA3169 /* WalletHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletHomeViewModel.swift; sourceTree = "<group>"; };
+		9335C13AD64F99A44D02D8EF /* LocalCardImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCardImageView.swift; sourceTree = "<group>"; };
 		9EB76388B08931FD968AEF93 /* BusinessCardWalletApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCardWalletApp.swift; sourceTree = "<group>"; };
 		A47CEE1FAA8BF49D2271B0DE /* CameraPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPickerView.swift; sourceTree = "<group>"; };
 		AACA7E168D7028CD22E2BCD4 /* VisionOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionOCRService.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 			children = (
 				192943C09D813786E3DDFDCD /* BusinessCardTileView.swift */,
 				3BAD932061601FD724E075AB /* CardRowView.swift */,
+				9335C13AD64F99A44D02D8EF /* LocalCardImageView.swift */,
 				EDAECE9AD91721803F47EFD6 /* TopControlBar.swift */,
 			);
 			path = Components;
@@ -194,6 +197,7 @@
 				0CD3A7A62348941096B2CCE1 /* CardGroup.swift in Sources */,
 				4AB9D94DC18439CF76EDD829 /* CardRowView.swift in Sources */,
 				A36EA31E2C38E1FE37A2E2BD /* ImageStore.swift in Sources */,
+				D23232C5A79B29B54962E6F2 /* LocalCardImageView.swift in Sources */,
 				ADD23D8F34D997AEB7AA9FD4 /* OCRReviewEditView.swift in Sources */,
 				A4B38BEAF52E14B7F07F6492 /* ScanCaptureView.swift in Sources */,
 				4B55418CA1C0B3C45799E3E5 /* TopControlBar.swift in Sources */,

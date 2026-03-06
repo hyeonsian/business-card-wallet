@@ -7,14 +7,9 @@ struct BusinessCardTileView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.gray.opacity(0.15))
+                LocalCardImageView(imagePath: card.imageLocalPath)
                     .frame(height: 220)
-                    .overlay(
-                        Image(systemName: "person.text.rectangle")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.secondary)
-                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
 
                 Button(action: onToggleFavorite) {
                     Image(systemName: card.isFavorite ? "star.fill" : "star")
