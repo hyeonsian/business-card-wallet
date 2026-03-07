@@ -3,6 +3,7 @@ import SwiftUI
 struct BusinessCardTileView: View {
     let card: BusinessCard
     let onToggleFavorite: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -12,11 +13,22 @@ struct BusinessCardTileView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 18))
                     .background(.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 18))
 
-                Button(action: onToggleFavorite) {
-                    Image(systemName: card.isFavorite ? "star.fill" : "star")
-                        .foregroundStyle(card.isFavorite ? .yellow : .white)
-                        .padding(8)
-                        .background(.black.opacity(0.45), in: Circle())
+                HStack {
+                    Button(action: onToggleFavorite) {
+                        Image(systemName: card.isFavorite ? "star.fill" : "star")
+                            .foregroundStyle(card.isFavorite ? .yellow : .white)
+                            .padding(8)
+                            .background(.black.opacity(0.45), in: Circle())
+                    }
+
+                    Spacer()
+
+                    Button(role: .destructive, action: onDelete) {
+                        Image(systemName: "trash.fill")
+                            .foregroundStyle(.white)
+                            .padding(8)
+                            .background(.red.opacity(0.82), in: Circle())
+                    }
                 }
                 .padding(10)
             }
@@ -40,6 +52,7 @@ struct BusinessCardTileView: View {
                     infoRow(system: "globe", title: "웹사이트", value: card.website)
                     infoRow(system: "parkingsign.circle.fill", title: "주차", value: card.parkingInfo)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(10)
                 .background(.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
 
@@ -50,7 +63,7 @@ struct BusinessCardTileView: View {
                         .lineLimit(3)
                 }
             }
-            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(14)
         .background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 20))

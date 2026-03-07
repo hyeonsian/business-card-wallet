@@ -7,94 +7,110 @@ struct WalletHomeView: View {
     @Query private var cards: [BusinessCard]
 
     @StateObject private var viewModel = WalletHomeViewModel()
+    @State private var selectedCardPage = 0
+    @State private var cardToDelete: BusinessCard?
+    @State private var showDeleteConfirm = false
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.95, green: 0.97, blue: 1.0),
-                        Color(red: 0.98, green: 0.98, blue: 0.96)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-
-                VStack(spacing: 12) {
-                    HStack {
-                        Text("명함 지갑")
-                            .font(.largeTitle.weight(.bold))
-                        Spacer()
-
-                        Button {
-                            viewModel.isPresentingScan = true
-                        } label: {
-                            Label("명함 스캔", systemImage: "camera")
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-
-                    VStack(spacing: 10) {
-                        TopControlBar(
-                            groups: groups,
-                            selectedGroupID: $viewModel.selectedGroupID,
-                            sortOption: $viewModel.sortOption,
-                            onTapAddGroup: { viewModel.isPresentingAddGroup = true }
-                        )
-
-                        Picker("보기", selection: $viewModel.viewMode) {
-                            ForEach(CardViewMode.allCases) { mode in
-                                Text(mode.rawValue).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-
-                        HStack(spacing: 8) {
-                            Text("즐겨찾기만")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Toggle("", isOn: $viewModel.showFavoritesOnly)
-                                .toggleStyle(.switch)
-                                .labelsHidden()
-                        }
-                        .padding(.horizontal, 2)
-                    }
-                    .padding(12)
-                    .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(.white.opacity(0.8), lineWidth: 1)
+            GeometryReader { geo in
+                ZStack {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.95, green: 0.97, blue: 1.0),
+                            Color(red: 0.98, green: 0.98, blue: 0.96)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
-                    .padding(.horizontal)
+                    .ignoresSafeArea()
 
-                    TextField("이름, 회사, 이메일, 전화로 검색", text: $viewModel.searchQuery)
-                        .textFieldStyle(.roundedBorder)
+                    VStack(spacing: 12) {
+                        HStack(alignment: .center) {
+                            Text("명함 지갑")
+                                .font(.largeTitle.weight(.bold))
+                            Spacer()
+
+                            Button {
+                                viewModel.isPresentingScan = true
+                            } label: {
+                                Label("명함 스캔", systemImage: "camera")
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
                         .padding(.horizontal)
 
-                    contentView
-                        .background(.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16))
+                        VStack(spacing: 10) {
+                            TopControlBar(
+                                groups: groups,
+                                selectedGroupID: $viewModel.selectedGroupID,
+                                sortOption: $viewModel.sortOption,
+                                onTapAddGroup: { viewModel.isPresentingAddGroup = true }
+                            )
+
+                            Picker("보기", selection: $viewModel.viewMode) {
+                                ForEach(CardViewMode.allCases) { mode in
+                                    Text(mode.rawValue).tag(mode)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+
+                            HStack(spacing: 8) {
+                                Text("즐겨찾기만")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Toggle("", isOn: $viewModel.showFavoritesOnly)
+                                    .toggleStyle(.switch)
+                                    .labelsHidden()
+                            }
+                            .padding(.horizontal, 2)
+                        }
+                        .padding(12)
+                        .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 16))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
-                                .stroke(.white.opacity(0.9), lineWidth: 1)
+                                .stroke(.white.opacity(0.8), lineWidth: 1)
                         )
                         .padding(.horizontal)
 
-                    Spacer(minLength: 6)
+                        TextField("이름, 회사, 이메일, 전화로 검색", text: $viewModel.searchQuery)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(.horizontal)
+
+                        contentView
+                            .background(.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(.white.opacity(0.9), lineWidth: 1)
+                            )
+                            .padding(.horizontal)
+
+                        Spacer(minLength: 6)
+                    }
+                    .padding(.top, max(geo.safeAreaInsets.top, 52))
+                    .padding(.bottom, max(geo.safeAreaInsets.bottom, 10))
                 }
-                .safeAreaPadding(.top, 8)
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear(perform: ensureDefaultGroup)
+            .onChange(of: filteredCards.map(\.id)) { _ in
+                adjustSelectedCardPage()
+            }
             .alert("새 그룹", isPresented: $viewModel.isPresentingAddGroup) {
                 TextField("그룹 이름", text: $viewModel.newGroupName)
                 Button("취소", role: .cancel) {}
                 Button("추가", action: addGroup)
             } message: {
                 Text("그룹 이름을 입력하세요")
+            }
+            .confirmationDialog("명함 삭제", isPresented: $showDeleteConfirm, titleVisibility: .visible, presenting: cardToDelete) { card in
+                Button("삭제", role: .destructive) {
+                    deleteCard(card)
+                }
+                Button("취소", role: .cancel) {}
+            } message: { card in
+                Text("\(card.name ?? "이 명함")을(를) 삭제하시겠습니까?")
             }
             .sheet(isPresented: $viewModel.isPresentingScan) {
                 ScanCaptureView { draft in
@@ -162,22 +178,37 @@ struct WalletHomeView: View {
         } else {
             switch viewModel.viewMode {
             case .card:
-                TabView {
-                    ForEach(filteredCards) { card in
-                        BusinessCardTileView(card: card) {
-                            toggleFavorite(card)
+                VStack(spacing: 10) {
+                    TabView(selection: $selectedCardPage) {
+                        ForEach(Array(filteredCards.enumerated()), id: \.element.id) { index, card in
+                            BusinessCardTileView(
+                                card: card,
+                                onToggleFavorite: { toggleFavorite(card) },
+                                onDelete: { requestDelete(card) }
+                            )
+                            .padding(.horizontal, 10)
+                            .tag(index)
                         }
-                        .padding(.horizontal, 10)
                     }
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .frame(minHeight: 520)
+
+                    HStack(spacing: 10) {
+                        ForEach(filteredCards.indices, id: \.self) { index in
+                            Circle()
+                                .fill(index == selectedCardPage ? Color.blue : Color.gray.opacity(0.55))
+                                .frame(width: 9, height: 9)
+                        }
+                    }
+                    .padding(.bottom, 8)
                 }
-                .tabViewStyle(.page(indexDisplayMode: .always))
-                .indexViewStyle(.page(backgroundDisplayMode: .always))
-                .frame(minHeight: 520)
             case .list:
                 List(filteredCards) { card in
-                    CardRowView(card: card) {
-                        toggleFavorite(card)
-                    }
+                    CardRowView(
+                        card: card,
+                        onToggleFavorite: { toggleFavorite(card) },
+                        onDelete: { requestDelete(card) }
+                    )
                     .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -235,12 +266,33 @@ struct WalletHomeView: View {
 
         modelContext.insert(card)
         try? modelContext.save()
+        adjustSelectedCardPage()
     }
 
     private func toggleFavorite(_ card: BusinessCard) {
         card.isFavorite.toggle()
         card.updatedAt = .now
         try? modelContext.save()
+    }
+
+    private func requestDelete(_ card: BusinessCard) {
+        cardToDelete = card
+        showDeleteConfirm = true
+    }
+
+    private func deleteCard(_ card: BusinessCard) {
+        modelContext.delete(card)
+        try? modelContext.save()
+        adjustSelectedCardPage()
+    }
+
+    private func adjustSelectedCardPage() {
+        let count = filteredCards.count
+        if count == 0 {
+            selectedCardPage = 0
+        } else if selectedCardPage >= count {
+            selectedCardPage = count - 1
+        }
     }
 }
 

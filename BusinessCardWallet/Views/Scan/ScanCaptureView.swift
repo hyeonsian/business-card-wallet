@@ -280,6 +280,7 @@ private struct AutoScanCameraRepresentable: UIViewControllerRepresentable {
 private final class AutoScanCameraViewController: UIViewController, @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
     private let session = AVCaptureSession()
     private let previewLayer = AVCaptureVideoPreviewLayer()
+    private let dimLayer = CAShapeLayer()
     private let guideLayer = CAShapeLayer()
     private let detectedLayer = CAShapeLayer()
     private let ciContext = CIContext(options: nil)
@@ -317,6 +318,10 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
 
+        dimLayer.fillRule = .evenOdd
+        dimLayer.fillColor = UIColor.black.withAlphaComponent(0.30).cgColor
+        view.layer.addSublayer(dimLayer)
+
         guideLayer.fillColor = UIColor.clear.cgColor
         guideLayer.strokeColor = UIColor.white.withAlphaComponent(0.75).cgColor
         guideLayer.lineWidth = 2
@@ -334,6 +339,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer.frame = view.bounds
+        dimLayer.frame = view.bounds
         guideLayer.frame = view.bounds
         detectedLayer.frame = view.bounds
         updateGuidePath()
@@ -510,7 +516,12 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         hasCapturedImage = true
 
         let cameraImage = CIImage(cvPixelBuffer: pixelBuffer).oriented(.right)
-        let processed = Self.perspectiveAndColorAdjusted(ciImage: cameraImage, rectangle: rectangle) ?? cameraImage
+        let processed = croppedObservationImage(from: cameraImage, rectangle: rectangle)
+            .applyingFilter("CIColorControls", parameters: [
+                kCIInputSaturationKey: 1.02,
+                kCIInputContrastKey: 1.06,
+                kCIInputBrightnessKey: 0.01
+            ])
 
         guard let cgImage = ciContext.createCGImage(processed, from: processed.extent) else {
             hasCapturedImage = false
@@ -610,6 +621,24 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         return cameraImage.cropped(to: cropRect)
     }
 
+    private func croppedObservationImage(from cameraImage: CIImage, rectangle: VNRectangleObservation) -> CIImage {
+        let extent = cameraImage.extent
+        let rawRect = VNImageRectForNormalizedRect(
+            rectangle.boundingBox,
+            Int(extent.width),
+            Int(extent.height)
+        )
+        let insetRect = rawRect.insetBy(
+            dx: -rawRect.width * 0.02,
+            dy: -rawRect.height * 0.02
+        )
+        let cropRect = insetRect.intersection(extent)
+        if cropRect.isNull || cropRect.isEmpty {
+            return croppedGuideImage(from: cameraImage)
+        }
+        return cameraImage.cropped(to: cropRect)
+    }
+
     private static func perspectiveAndColorAdjusted(ciImage: CIImage, rectangle: VNRectangleObservation) -> CIImage? {
         let extent = ciImage.extent
 
@@ -641,15 +670,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     }
 
     private static func normalizedLandscapeImage(_ image: UIImage) -> UIImage {
-        let candidate: UIImage
-        if image.size.height > image.size.width, let cgImage = image.cgImage {
-            candidate = UIImage(cgImage: cgImage, scale: image.scale, orientation: .right)
-        } else {
-            candidate = image
-        }
-
-        let flattened = flattenedImage(candidate)
-        return bestReadableOrientation(for: flattened)
+        flattenedImage(image)
     }
 
     private static func flattenedImage(_ image: UIImage) -> UIImage {
@@ -658,89 +679,6 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: targetSize))
         }
-    }
-
-    private static func bestReadableOrientation(for image: UIImage) -> UIImage {
-        let rotated180 = rotated180Image(image)
-        let originalScore = textReadabilityScore(image)
-        let rotatedScore = textReadabilityScore(rotated180)
-
-        if rotatedScore > originalScore + 3.0 {
-            return rotated180
-        }
-        return image
-    }
-
-    private static func rotated180Image(_ image: UIImage) -> UIImage {
-        let size = image.size
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { context in
-            let cg = context.cgContext
-            cg.translateBy(x: size.width / 2, y: size.height / 2)
-            cg.rotate(by: .pi)
-            image.draw(in: CGRect(x: -size.width / 2, y: -size.height / 2, width: size.width, height: size.height))
-        }
-    }
-
-    private static func textReadabilityScore(_ image: UIImage) -> CGFloat {
-        guard let cgImage = image.cgImage else { return 0 }
-
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
-        request.recognitionLanguages = ["ko-KR", "en-US"]
-        request.minimumTextHeight = 0.015
-
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        do {
-            try handler.perform([request])
-        } catch {
-            return 0
-        }
-
-        let observations = request.results ?? []
-        var score: CGFloat = 0
-
-        let phoneRegex = try? NSRegularExpression(pattern: #"(?:\+?\d[\d\-\s\(\)]{7,}\d)"#)
-        let emailRegex = try? NSRegularExpression(pattern: #"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#)
-        let webRegex = try? NSRegularExpression(pattern: #"(?:www\.)?[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:/[^\s]*)?"#)
-
-        for observation in observations {
-            guard let candidate = observation.topCandidates(1).first else { continue }
-            let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
-            if text.count < 2 { continue }
-
-            let confidence = CGFloat(candidate.confidence)
-            let hangulCount = CGFloat(text.filter { ("가"..."힣").contains($0) }.count)
-            let alphaCount = CGFloat(text.filter { $0.isLetter }.count)
-            let digitCount = CGFloat(text.filter { $0.isNumber }.count)
-            let symbolCount = CGFloat(text.filter { !$0.isLetter && !$0.isNumber && !$0.isWhitespace }.count)
-
-            let nsText = text as NSString
-            let range = NSRange(location: 0, length: nsText.length)
-
-            let hasPhone = (phoneRegex?.firstMatch(in: text, options: [], range: range) != nil)
-            let hasEmail = (emailRegex?.firstMatch(in: text, options: [], range: range) != nil)
-            let hasWeb = (webRegex?.firstMatch(in: text, options: [], range: range) != nil)
-
-            var lineScore = confidence * 2.2
-            lineScore += min(3.0, hangulCount / 3.0)
-            lineScore += min(2.0, alphaCount / 5.0)
-            lineScore += min(2.0, digitCount / 4.0)
-            if hasPhone { lineScore += 2.5 }
-            if hasEmail { lineScore += 2.5 }
-            if hasWeb { lineScore += 2.0 }
-            if text.count >= 2 && text.count <= 40 { lineScore += 0.8 }
-
-            let ratioDenom = max(1.0, CGFloat(text.count))
-            if symbolCount / ratioDenom > 0.35 {
-                lineScore -= 0.8
-            }
-
-            score += lineScore
-        }
-
-        return score
     }
 
     private func drawOverlay(for observation: VNRectangleObservation) {
@@ -762,6 +700,11 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     private func updateGuidePath() {
         let guideRect = guideRectInView()
         guideLayer.path = UIBezierPath(roundedRect: guideRect, cornerRadius: 16).cgPath
+
+        let maskPath = UIBezierPath(rect: view.bounds)
+        let holePath = UIBezierPath(roundedRect: guideRect, cornerRadius: 16)
+        maskPath.append(holePath)
+        dimLayer.path = maskPath.cgPath
     }
 
     private func guideRectInView() -> CGRect {
