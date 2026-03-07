@@ -25,71 +25,72 @@ struct WalletHomeView: View {
                     )
                     .ignoresSafeArea()
 
-                    VStack(spacing: 12) {
-                        HStack(alignment: .center) {
-                            Text("명함 지갑")
-                                .font(.largeTitle.weight(.bold))
-                            Spacer()
-
-                            Button {
-                                viewModel.isPresentingScan = true
-                            } label: {
-                                Label("명함 스캔", systemImage: "camera")
-                            }
-                            .buttonStyle(.borderedProminent)
-                        }
-                        .padding(.horizontal)
-
-                        VStack(spacing: 10) {
-                            TopControlBar(
-                                groups: groups,
-                                selectedGroupID: $viewModel.selectedGroupID,
-                                sortOption: $viewModel.sortOption,
-                                onTapAddGroup: { viewModel.isPresentingAddGroup = true }
-                            )
-
-                            Picker("보기", selection: $viewModel.viewMode) {
-                                ForEach(CardViewMode.allCases) { mode in
-                                    Text(mode.rawValue).tag(mode)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-
-                            HStack(spacing: 8) {
-                                Text("즐겨찾기만")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 12) {
+                            HStack(alignment: .center) {
+                                Text("명함 지갑")
+                                    .font(.largeTitle.weight(.bold))
                                 Spacer()
-                                Toggle("", isOn: $viewModel.showFavoritesOnly)
-                                    .toggleStyle(.switch)
-                                    .labelsHidden()
-                            }
-                            .padding(.horizontal, 2)
-                        }
-                        .padding(12)
-                        .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 16))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(.white.opacity(0.8), lineWidth: 1)
-                        )
-                        .padding(.horizontal)
 
-                        TextField("이름, 회사, 이메일, 전화로 검색", text: $viewModel.searchQuery)
-                            .textFieldStyle(.roundedBorder)
+                                Button {
+                                    viewModel.isPresentingScan = true
+                                } label: {
+                                    Label("명함 스캔", systemImage: "camera")
+                                }
+                                .buttonStyle(.borderedProminent)
+                            }
                             .padding(.horizontal)
 
-                        contentView
-                            .background(.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16))
+                            VStack(spacing: 10) {
+                                TopControlBar(
+                                    groups: groups,
+                                    selectedGroupID: $viewModel.selectedGroupID,
+                                    sortOption: $viewModel.sortOption,
+                                    onTapAddGroup: { viewModel.isPresentingAddGroup = true }
+                                )
+
+                                Picker("보기", selection: $viewModel.viewMode) {
+                                    ForEach(CardViewMode.allCases) { mode in
+                                        Text(mode.rawValue).tag(mode)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+
+                                HStack(spacing: 8) {
+                                    Text("즐겨찾기만")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Toggle("", isOn: $viewModel.showFavoritesOnly)
+                                        .toggleStyle(.switch)
+                                        .labelsHidden()
+                                }
+                                .padding(.horizontal, 2)
+                            }
+                            .padding(12)
+                            .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 16))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .stroke(.white.opacity(0.9), lineWidth: 1)
+                                    .stroke(.white.opacity(0.8), lineWidth: 1)
                             )
                             .padding(.horizontal)
 
-                        Spacer(minLength: 6)
+                            TextField("이름, 회사, 이메일, 전화로 검색", text: $viewModel.searchQuery)
+                                .textFieldStyle(.roundedBorder)
+                                .padding(.horizontal)
+
+                            contentView
+                                .background(.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 16))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(.white.opacity(0.9), lineWidth: 1)
+                                )
+                                .padding(.horizontal)
+                        }
+                        .padding(.top, geo.safeAreaInsets.top + 8)
+                        .padding(.bottom, max(geo.safeAreaInsets.bottom, 12))
+                        .frame(maxWidth: .infinity)
                     }
-                    .padding(.top, max(geo.safeAreaInsets.top, 52))
-                    .padding(.bottom, max(geo.safeAreaInsets.bottom, 10))
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
@@ -203,18 +204,17 @@ struct WalletHomeView: View {
                     .padding(.bottom, 8)
                 }
             case .list:
-                List(filteredCards) { card in
-                    CardRowView(
-                        card: card,
-                        onToggleFavorite: { toggleFavorite(card) },
-                        onDelete: { requestDelete(card) }
-                    )
-                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
+                LazyVStack(spacing: 8) {
+                    ForEach(filteredCards) { card in
+                        CardRowView(
+                            card: card,
+                            onToggleFavorite: { toggleFavorite(card) },
+                            onDelete: { requestDelete(card) }
+                        )
+                    }
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
             }
         }
     }

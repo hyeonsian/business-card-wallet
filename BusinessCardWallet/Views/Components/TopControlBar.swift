@@ -46,14 +46,9 @@ struct TopControlBar: View {
                 }
             }
 
-            Button(action: onTapAddGroup) {
-                Image(systemName: "plus")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .frame(width: 36, height: 36)
-                    .background(.white.opacity(0.9), in: Circle())
-                    .overlay(Circle().stroke(.black.opacity(0.07)))
-            }
+            Button("그룹 추가", action: onTapAddGroup)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.blue)
         }
     }
 }
