@@ -291,6 +291,8 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     private var textStableCount = 0
     private var stableStartTime: CFAbsoluteTime?
     private var textStableStartTime: CFAbsoluteTime?
+    private var rectanglePresenceStartTime: CFAbsoluteTime?
+    private var rectanglePresenceCount = 0
     private var lastBoundingBox: CGRect?
 
     private let onCapture: (UIImage) -> Void
@@ -426,6 +428,8 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
               isGoodCandidate(rectangle) else {
             stableFrameCount = 0
             stableStartTime = nil
+            rectanglePresenceStartTime = nil
+            rectanglePresenceCount = 0
             lastBoundingBox = nil
             DispatchQueue.main.async {
                 self.detectedLayer.path = nil
@@ -435,9 +439,17 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         }
 
         textStableCount = 0
+        textStableStartTime = nil
 
         DispatchQueue.main.async {
             self.drawOverlay(for: rectangle)
+        }
+
+        if rectanglePresenceStartTime == nil {
+            rectanglePresenceStartTime = CFAbsoluteTimeGetCurrent()
+            rectanglePresenceCount = 1
+        } else {
+            rectanglePresenceCount += 1
         }
 
         if let previous = lastBoundingBox, isStable(from: previous, to: rectangle.boundingBox) {
@@ -449,7 +461,11 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         lastBoundingBox = rectangle.boundingBox
 
         let stableElapsed = CFAbsoluteTimeGetCurrent() - (stableStartTime ?? CFAbsoluteTimeGetCurrent())
-        if stableFrameCount >= 6 && stableElapsed >= 0.9 {
+        let presenceElapsed = CFAbsoluteTimeGetCurrent() - (rectanglePresenceStartTime ?? CFAbsoluteTimeGetCurrent())
+        let shouldCaptureFromStability = stableFrameCount >= 6 && stableElapsed >= 0.9
+        let shouldCaptureFromPresence = rectanglePresenceCount >= 8 && presenceElapsed >= 1.0
+
+        if shouldCaptureFromStability || shouldCaptureFromPresence {
             captureCardImage(from: pixelBuffer, rectangle: rectangle)
         }
     }

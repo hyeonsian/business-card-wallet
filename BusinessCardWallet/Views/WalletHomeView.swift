@@ -26,6 +26,13 @@ struct WalletHomeView: View {
                         Text("명함 지갑")
                             .font(.largeTitle.weight(.bold))
                         Spacer()
+
+                        Button {
+                            viewModel.isPresentingScan = true
+                        } label: {
+                            Label("명함 스캔", systemImage: "camera")
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
                     .padding(.horizontal)
                     .padding(.top, 8)
@@ -76,15 +83,7 @@ struct WalletHomeView: View {
                         )
                         .padding(.horizontal)
 
-                    Button {
-                        viewModel.isPresentingScan = true
-                    } label: {
-                        Label("명함 스캔", systemImage: "camera")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .padding(.horizontal)
-                    .padding(.bottom, 6)
+                    Spacer(minLength: 6)
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
