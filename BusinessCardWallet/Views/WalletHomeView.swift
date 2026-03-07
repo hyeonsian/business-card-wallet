@@ -85,6 +85,7 @@ struct WalletHomeView: View {
 
                     Spacer(minLength: 6)
                 }
+                .safeAreaPadding(.top, 8)
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear(perform: ensureDefaultGroup)
@@ -170,6 +171,7 @@ struct WalletHomeView: View {
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
+                .indexViewStyle(.page(backgroundDisplayMode: .always))
                 .frame(minHeight: 520)
             case .list:
                 List(filteredCards) { card in

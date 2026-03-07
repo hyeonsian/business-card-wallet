@@ -665,7 +665,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         let originalScore = textReadabilityScore(image)
         let rotatedScore = textReadabilityScore(rotated180)
 
-        if rotatedScore > originalScore + 0.2 {
+        if rotatedScore > originalScore + 3.0 {
             return rotated180
         }
         return image
@@ -686,10 +686,10 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         guard let cgImage = image.cgImage else { return 0 }
 
         let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .fast
-        request.usesLanguageCorrection = false
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
         request.recognitionLanguages = ["ko-KR", "en-US"]
-        request.minimumTextHeight = 0.02
+        request.minimumTextHeight = 0.015
 
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         do {
@@ -701,6 +701,10 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         let observations = request.results ?? []
         var score: CGFloat = 0
 
+        let phoneRegex = try? NSRegularExpression(pattern: #"(?:\+?\d[\d\-\s\(\)]{7,}\d)"#)
+        let emailRegex = try? NSRegularExpression(pattern: #"[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#)
+        let webRegex = try? NSRegularExpression(pattern: #"(?:www\.)?[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:/[^\s]*)?"#)
+
         for observation in observations {
             guard let candidate = observation.topCandidates(1).first else { continue }
             let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -709,7 +713,31 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             let confidence = CGFloat(candidate.confidence)
             let hangulCount = CGFloat(text.filter { ("가"..."힣").contains($0) }.count)
             let alphaCount = CGFloat(text.filter { $0.isLetter }.count)
-            score += confidence * (1 + min(6, (hangulCount + alphaCount) / 8))
+            let digitCount = CGFloat(text.filter { $0.isNumber }.count)
+            let symbolCount = CGFloat(text.filter { !$0.isLetter && !$0.isNumber && !$0.isWhitespace }.count)
+
+            let nsText = text as NSString
+            let range = NSRange(location: 0, length: nsText.length)
+
+            let hasPhone = (phoneRegex?.firstMatch(in: text, options: [], range: range) != nil)
+            let hasEmail = (emailRegex?.firstMatch(in: text, options: [], range: range) != nil)
+            let hasWeb = (webRegex?.firstMatch(in: text, options: [], range: range) != nil)
+
+            var lineScore = confidence * 2.2
+            lineScore += min(3.0, hangulCount / 3.0)
+            lineScore += min(2.0, alphaCount / 5.0)
+            lineScore += min(2.0, digitCount / 4.0)
+            if hasPhone { lineScore += 2.5 }
+            if hasEmail { lineScore += 2.5 }
+            if hasWeb { lineScore += 2.0 }
+            if text.count >= 2 && text.count <= 40 { lineScore += 0.8 }
+
+            let ratioDenom = max(1.0, CGFloat(text.count))
+            if symbolCount / ratioDenom > 0.35 {
+                lineScore -= 0.8
+            }
+
+            score += lineScore
         }
 
         return score
