@@ -289,6 +289,8 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
     private var frameCounter = 0
     private var stableFrameCount = 0
     private var textStableCount = 0
+    private var stableStartTime: CFAbsoluteTime?
+    private var textStableStartTime: CFAbsoluteTime?
     private var lastBoundingBox: CGRect?
 
     private let onCapture: (UIImage) -> Void
@@ -423,6 +425,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         guard let rectangle = bestRectangle(from: request.results ?? []),
               isGoodCandidate(rectangle) else {
             stableFrameCount = 0
+            stableStartTime = nil
             lastBoundingBox = nil
             DispatchQueue.main.async {
                 self.detectedLayer.path = nil
@@ -441,10 +444,12 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             stableFrameCount += 1
         } else {
             stableFrameCount = 1
+            stableStartTime = CFAbsoluteTimeGetCurrent()
         }
         lastBoundingBox = rectangle.boundingBox
 
-        if stableFrameCount >= 4 {
+        let stableElapsed = CFAbsoluteTimeGetCurrent() - (stableStartTime ?? CFAbsoluteTimeGetCurrent())
+        if stableFrameCount >= 6 && stableElapsed >= 0.9 {
             captureCardImage(from: pixelBuffer, rectangle: rectangle)
         }
     }
@@ -510,11 +515,16 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
         if frameCounter % 3 != 0 { return }
         guard isLikelyCardTextPresent(pixelBuffer: pixelBuffer) else {
             textStableCount = 0
+            textStableStartTime = nil
             return
         }
 
         textStableCount += 1
-        if textStableCount >= 3 {
+        if textStableCount == 1 {
+            textStableStartTime = CFAbsoluteTimeGetCurrent()
+        }
+        let elapsed = CFAbsoluteTimeGetCurrent() - (textStableStartTime ?? CFAbsoluteTimeGetCurrent())
+        if textStableCount >= 5 && elapsed >= 1.0 {
             captureUsingGuideCrop(from: pixelBuffer)
         }
     }
@@ -538,7 +548,7 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             return false
         }
 
-        let observations = (request.results as? [VNRecognizedTextObservation]) ?? []
+        let observations = request.results ?? []
         let count = observations.reduce(into: 0) { partial, observation in
             guard let candidate = observation.topCandidates(1).first else { return }
             let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -622,11 +632,71 @@ private final class AutoScanCameraViewController: UIViewController, @preconcurre
             candidate = image
         }
 
-        let targetSize = CGSize(width: candidate.size.width, height: candidate.size.height)
+        let flattened = flattenedImage(candidate)
+        return bestReadableOrientation(for: flattened)
+    }
+
+    private static func flattenedImage(_ image: UIImage) -> UIImage {
+        let targetSize = CGSize(width: image.size.width, height: image.size.height)
         let renderer = UIGraphicsImageRenderer(size: targetSize)
         return renderer.image { _ in
-            candidate.draw(in: CGRect(origin: .zero, size: targetSize))
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
         }
+    }
+
+    private static func bestReadableOrientation(for image: UIImage) -> UIImage {
+        let rotated180 = rotated180Image(image)
+        let originalScore = textReadabilityScore(image)
+        let rotatedScore = textReadabilityScore(rotated180)
+
+        if rotatedScore > originalScore + 0.2 {
+            return rotated180
+        }
+        return image
+    }
+
+    private static func rotated180Image(_ image: UIImage) -> UIImage {
+        let size = image.size
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            let cg = context.cgContext
+            cg.translateBy(x: size.width / 2, y: size.height / 2)
+            cg.rotate(by: .pi)
+            image.draw(in: CGRect(x: -size.width / 2, y: -size.height / 2, width: size.width, height: size.height))
+        }
+    }
+
+    private static func textReadabilityScore(_ image: UIImage) -> CGFloat {
+        guard let cgImage = image.cgImage else { return 0 }
+
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .fast
+        request.usesLanguageCorrection = false
+        request.recognitionLanguages = ["ko-KR", "en-US"]
+        request.minimumTextHeight = 0.02
+
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        do {
+            try handler.perform([request])
+        } catch {
+            return 0
+        }
+
+        let observations = request.results ?? []
+        var score: CGFloat = 0
+
+        for observation in observations {
+            guard let candidate = observation.topCandidates(1).first else { continue }
+            let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
+            if text.count < 2 { continue }
+
+            let confidence = CGFloat(candidate.confidence)
+            let hangulCount = CGFloat(text.filter { ("가"..."힣").contains($0) }.count)
+            let alphaCount = CGFloat(text.filter { $0.isLetter }.count)
+            score += confidence * (1 + min(6, (hangulCount + alphaCount) / 8))
+        }
+
+        return score
     }
 
     private func drawOverlay(for observation: VNRectangleObservation) {
